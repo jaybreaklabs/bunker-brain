@@ -1,0 +1,40 @@
+# Monthly: bump content/zims.json to the newest Kiwix releases and open a PR.
+# Needs repo setting: Actions → General → "Allow GitHub Actions to create and approve pull requests".
+name: manifest-update
+
+on:
+  schedule:
+    - cron: "0 14 2 * *"   # 14:00 UTC on the 2nd
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Test
+        run: cd content && python3 -m unittest test_manifest
+      - name: Update manifest
+        id: update
+        run: |
+          python3 content/update_manifest.py | tee changes.txt
+          python3 content/check_manifest.py
+          git diff --quiet content/zims.json || echo "changed=true" >> "$GITHUB_OUTPUT"
+      - name: Open PR
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="manifest/$(date -u +%Y-%m)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git commit -am "content: bump ZIMs to newest Kiwix releases ($(date -u +%Y-%m))"
+          git push --force origin "$branch"
+          gh pr view "$branch" >/dev/null 2>&1 || gh pr create --head "$branch" \
+            --title "Bump ZIMs to newest Kiwix releases ($(date -u +%Y-%m))" \
+            --body "$(printf 'Automated monthly check of the Kiwix catalog.\n\n```\n%s\n```\n\nNew files must be downloaded and hash-checked before the old ones are removed.' "$(cat changes.txt)")"

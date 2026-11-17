@@ -6,6 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <title>Offline Library</title>
 <style>
+  [hidden] { display: none !important; }
   :root {
     --bg: #f7f6f3; --card: #ffffff; --text: #1b1b1b; --muted: #5a5a5a;
     --line: #dcd9d2; --accent: #0b5cad; --accent-text: #ffffff; --warn-bg: #fff4d6; --warn-text: #4a3800;
@@ -72,6 +73,8 @@
 
   <form class="search" action="/library/search" method="get" role="search">
     <input type="search" name="pattern" placeholder="Search all books" aria-label="Search all books" required>
+    <!-- kiwix-serve refuses mixed-language searches; leave multilingual books (still browsable) out. Matches the chat tool's EXCLUDE_TAGS. -->
+    <input type="hidden" name="books.filter.notag" value="lowtech">
     <button type="submit">Search</button>
   </form>
 

@@ -45,6 +45,16 @@ class ParseTests(unittest.TestCase):
         self.assertLessEqual(len(out), 54)
         self.assertTrue(out.endswith(" ..."))
 
+    def test_excerpt_finds_buried_answer(self):
+        text = "\n".join(["Contents", "Treating with Bleach"] + [f"filler line {i} " * 8 for i in range(60)]
+                         + ["Treating with Bleach", "Use unscented bleach.", "Clear water: 8 drops per gallon.",
+                            "Wait 30 minutes."] + [f"more filler {i} " * 8 for i in range(60)])
+        out = k.excerpt(text, "purify water with bleach", 400)
+        self.assertIn("8 drops per gallon", out)
+        self.assertLessEqual(len(out), 404)
+        self.assertEqual(k.excerpt("short", "x", 400), "short")
+        self.assertTrue(k.excerpt("a\n" * 500, "zzz", 50).startswith("a"))  # no match -> head
+
     def test_public_url(self):
         t = k.Tools()
         self.assertEqual(t._public_url("/content/b/A"), "https://wiki.example.com/library/content/b/A")
@@ -63,8 +73,15 @@ class ToolTests(unittest.TestCase):
         t = k.Tools()
         t.valves.MAX_RESULTS = 2
         t.valves.MAX_CHARS_PER_ARTICLE = 200
-        with mock.patch.object(k, "_get", lambda url: pages["search" if "/search?" in url else "content"]):
+        urls = []
+
+        def get(url):
+            urls.append(url)
+            return pages["search" if "/search?" in url else "content"]
+
+        with mock.patch.object(k, "_get", get):
             out = asyncio.run(t.search_library("boil water", __event_emitter__=emit))
+        self.assertIn("books.filter.notag=lowtech", urls[0])
         self.assertIn("cite them inline as [n]", out)
         self.assertIn("[1] Water (Wikivoyage)", out)
         self.assertIn("URL: https://wiki.example.com/library/content/wikivoyage_en_all_nopic_2026-09/Water", out)

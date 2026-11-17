@@ -1,0 +1,10 @@
+# TLS is terminated by the reverse proxy in front of this stack.
+:80 {
+	handle /library* {
+		reverse_proxy kiwix:8080
+	}
+	handle {
+		root * /srv
+		file_server
+	}
+}

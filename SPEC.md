@@ -52,9 +52,9 @@ It must keep working at home with the internet down, as long as there is power.
 
 | Service | Image | Notes |
 |---|---|---|
-| kiwix | `ghcr.io/kiwix/kiwix-serve:3.8.2` | `--library /data/library.xml --monitorLibrary --urlRootLocation /library`. Picks up new ZIMs without restart. |
-| web | `caddy:2` (static file server) | Landing page, `/map/` (MapLibre + `pmtiles` JS, `GeolocateControl`), serves `.pmtiles` with range requests. |
-| chat | `ghcr.io/open-webui/open-webui` (pin a version) | Connections to the LLM hosts' endpoints. Has its own login, unlike N.O.M.A.D. |
+| kiwix | `ghcr.io/kiwix/kiwix-serve:3.8.2` | `--urlRootLocation=/library *.zim`. Restart after adding ZIMs (a `library.xml` + `--monitorLibrary` would avoid that; not needed yet). |
+| web | `caddy:2.11.6-alpine` (`stack/Caddyfile`) | Proxies `/library` to kiwix. Landing page, `/map/` (MapLibre + `pmtiles` JS, `GeolocateControl`), serves `.pmtiles` with range requests. |
+| chat | `ghcr.io/open-webui/open-webui:v0.13.3` (pinned: upgrades can migrate the DB) | Own name (`chat.example.com`); Open WebUI doesn't support a sub-path. Connections to the LLM hosts' endpoints. Has its own login, unlike N.O.M.A.D. |
 
 No Docker socket mounts. Nothing here manages other containers.
 
@@ -365,8 +365,7 @@ sample responses.
 
 - Off-NAS copy of the model archive (USB drive in a drawer? second site?).
 - Mac firewall: restrict Ollama to the NAS IP (pf rule vs. app firewall).
-- Whether Open WebUI should sit at its own name (`chat.example.com`) or under the library name
-  (Open WebUI doesn't support a sub-path).
+- How the chat server reaches LLM hosts on another VLAN (allow rule vs. tunnel).
 - PC RAM upgrade, and a UPS.
 
 ## 12. Caveats on the research

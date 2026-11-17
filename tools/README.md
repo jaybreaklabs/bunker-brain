@@ -27,8 +27,9 @@ Workspace → Tools → gear icon on *Offline Library Search*:
 | `KIWIX_BASE_URL` | `http://kiwix:8080` | URL the Open WebUI container uses (service name on a shared Docker network, or host IP and port). If kiwix-serve runs with `--urlRootLocation /library`, append `/library`. |
 | `PUBLIC_BASE_URL` | `https://wiki.example.com/library` | Prefix for links in citations. Must point at the same URL root users browse. |
 | `MAX_RESULTS` | 5 | Articles fetched per search. |
-| `MAX_CHARS_PER_ARTICLE` | 3000 | Text budget per article. Lower it for small-context models. |
+| `MAX_CHARS_PER_ARTICLE` | 3000 | Text budget per article: the passages matching the query, not the article's opening. Lower it for small-context models. |
 | `BOOKS` | empty | Comma list of book names from `list_books()` (e.g. `wikivoyage_en_all`) to restrict search. Empty = all books. |
+| `EXCLUDE_TAGS` | `lowtech` | Comma list of catalog tags left out of search. kiwix-serve rejects searches mixing books in different languages, so multilingual books go here (they stay browsable). Keep in step with the hidden field in `web/index.html`. |
 
 ## Enable for a model
 

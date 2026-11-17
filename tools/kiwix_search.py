@@ -17,6 +17,8 @@ from pydantic import BaseModel, Field
 
 TIMEOUT = 15  # seconds per HTTP request
 ATOM = "{http://www.w3.org/2005/Atom}"
+STOPWORDS = {"the", "and", "for", "with", "how", "what", "does", "from", "that", "this", "are", "can",
+             "you", "your", "use", "using", "into", "about", "should", "when", "why", "which"}
 
 # Elements whose whole subtree is page chrome, not article text.
 SKIP_TAGS = {"script", "style", "noscript", "head", "nav", "header", "footer",
@@ -68,6 +70,42 @@ def trim(text: str, limit: int) -> str:
     cut = text[:limit]
     space = cut.rfind(" ")
     return (cut[:space] if space > limit * 0.8 else cut).rstrip() + " ..."
+
+
+def excerpt(text: str, query: str, limit: int) -> str:
+    """The lines that match the query (plus a little context), in page order, within limit.
+    Long pages bury the answer mid-article (a dosage table, a step list), so the head alone misses it."""
+    if len(text) <= limit:
+        return text
+    lines = text.split("\n")
+    low = [ln.lower() for ln in lines]
+    terms = {w for w in re.findall(r"\w+", query.lower()) if len(w) > 2 and w not in STOPWORDS}
+    # A term on every line ("water" in a water article) says little; a rare one ("bleach") says a lot.
+    weight = {t: 1 / n for t in terms if (n := sum(t in ln for ln in low))}
+    scores = [sum(w for t, w in weight.items() if t in ln) for ln in low]
+
+    def window(i):  # heading above, rows/steps below
+        return range(max(0, i - 2), min(len(lines), i + 4))
+
+    # Rank whole windows, so a real section beats a lone table-of-contents line.
+    ranked = sorted((i for i, s in enumerate(scores) if s), key=lambda i: (-sum(scores[j] for j in window(i)), i))
+    keep, used = set(), 0
+    for i in ranked:
+        for j in window(i):
+            if j not in keep:
+                keep.add(j)
+                used += len(lines[j]) + 1
+        if used >= limit:
+            break
+    if not keep:
+        return trim(text, limit)
+    out, prev = [], -1
+    for j in sorted(keep):
+        if prev != -1 and j != prev + 1:
+            out.append("...")
+        out.append(lines[j])
+        prev = j
+    return trim("\n".join(out), limit)
 
 
 def parse_search(xml_text: str) -> list:
@@ -128,6 +166,10 @@ class Tools:
         BOOKS: str = Field(
             "",
             description="Optional comma-separated book names (from list_books) to restrict search to. Empty = all books.")
+        EXCLUDE_TAGS: str = Field(
+            "lowtech",
+            description="Comma-separated catalog tags to leave out of search. kiwix-serve refuses to search books in "
+                        "different languages together, so multilingual books (e.g. Low-tech Magazine, tag 'lowtech') go here.")
 
     def __init__(self):
         self.valves = self.Valves()
@@ -150,6 +192,9 @@ class Tools:
         n = max(1, int(self.valves.MAX_RESULTS))
         params = [("pattern", query), ("format", "xml"), ("pageLength", str(n))]
         params += [("books.filter.name", b.strip()) for b in self.valves.BOOKS.split(",") if b.strip()]
+        notags = ";".join(t.strip() for t in self.valves.EXCLUDE_TAGS.split(",") if t.strip())
+        if notags:
+            params.append(("books.filter.notag", notags))
         try:
             hits = parse_search(await asyncio.to_thread(_get, f"{base}/search?{urllib.parse.urlencode(params)}"))
         except (urllib.error.URLError, OSError, ValueError) as e:  # URLError covers HTTPError; OSError covers timeouts
@@ -168,7 +213,7 @@ class Tools:
                 text = html_to_text(await asyncio.to_thread(_get, urllib.parse.urljoin(base + "/", h["link"])))
             except (urllib.error.URLError, OSError, ValueError):
                 text = h["snippet"]  # ponytail: snippet fallback if one article fails to load
-            text = trim(text, int(self.valves.MAX_CHARS_PER_ARTICLE))
+            text = excerpt(text, query, int(self.valves.MAX_CHARS_PER_ARTICLE))
             blocks.append(f"[{i}] {h['title']} ({h['book']})\nURL: {url}\n{text}")
             if __event_emitter__:
                 await __event_emitter__({

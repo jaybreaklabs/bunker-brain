@@ -1,5 +1,5 @@
 [
   { "id": "chat", "label": "Ask", "url": "https://chat.example.com", "fallback_url": "" },
   { "label": "Media server", "url": "https://media.example.com", "fallback_url": "http://192.0.2.10:8096" },
-  { "label": "Kiwix direct", "url": "http://192.0.2.10:8790", "fallback_url": "" }
+  { "label": "Kiwix direct", "url": "http://192.0.2.10:8790/library/", "fallback_url": "" }
 ]

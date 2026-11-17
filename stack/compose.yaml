@@ -1,12 +1,39 @@
-# Stack: kiwix-serve for the library (phase 0 — kiwix only).
-# Host paths come from .env next to this file (see .env.example).
+# Stack: the library site. Caddy serves the landing page, the map and its tiles,
+# and proxies /library to kiwix-serve. Host paths come from .env (see .env.example).
 services:
+  web:
+    image: caddy:2.11.6-alpine
+    container_name: offline-library-web
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${LIBRARY_DIR:?set LIBRARY_DIR in .env}/web:/srv:ro
+      - ${LIBRARY_DIR:?set LIBRARY_DIR in .env}/maps:/srv/tiles:ro
+    ports:
+      - "8791:80"
+    depends_on: [kiwix]
+    restart: unless-stopped
+
+  chat:
+    # Pinned: Open WebUI upgrades can migrate its database. Back up CONFIG_DIR/open-webui first.
+    image: ghcr.io/open-webui/open-webui:v0.13.3
+    container_name: offline-library-chat
+    environment:
+      WEBUI_SECRET_KEY_FILE: /app/backend/data/.webui_secret_key   # keep logins across re-creates
+    volumes:
+      - ${CONFIG_DIR:?set CONFIG_DIR in .env}/open-webui:/app/backend/data
+    ports:
+      - "8792:8080"
+    restart: unless-stopped
+    # Model connections (Ollama / OpenAI-compatible) are set in Admin → Connections.
+    # The library tool reaches kiwix at http://kiwix:8080/library on this network.
+
   kiwix:
     image: ghcr.io/kiwix/kiwix-serve:3.8.2
     container_name: offline-library-kiwix
-    command: ["*.zim"]          # start script expands the glob inside /data
+    # The start script expands the glob inside /data. Restart after adding ZIMs.
+    command: ["--urlRootLocation=/library", "*.zim"]
     volumes:
       - ${LIBRARY_DIR:?set LIBRARY_DIR in .env}/zim:/data:ro
     ports:
-      - "8790:8080"
+      - "8790:8080"   # direct access, bypassing the web container
     restart: unless-stopped
