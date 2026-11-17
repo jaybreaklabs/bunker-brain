@@ -1,0 +1,12 @@
+web/tiles/
+fetch/lists/
+*.env
+.env*
+__pycache__/
+.DS_Store
+
+# Personal deployment: never committed (see AGENTS.md rule 1)
+local/
+web/links.json
+stack/.env
+!stack/.env.example

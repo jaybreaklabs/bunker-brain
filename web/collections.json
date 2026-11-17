@@ -1,0 +1,54 @@
+{
+  "_comment": "Fallback only: used when zims.json is missing. Book name prefix -> section; longest matching prefix wins.",
+  "prefixes": {
+    "wikipedia_": "Reference",
+    "wiktionary_": "Reference",
+    "wikisource_": "Reference",
+    "wikivoyage_": "Reference",
+    "wikibooks_": "Reference",
+    "wikiversity_": "Reference",
+    "archlinux_": "Reference",
+
+    "wikipedia_en_medicine": "Medical",
+    "mdwiki_": "Medical",
+    "irp.fas.org_en_military-medicine": "Medical",
+    "zimgit-medicine": "Medical",
+    "medicalsciences.stackexchange.com": "Medical",
+
+    "zimgit-water": "Water & Food",
+    "zimgit-food": "Water & Food",
+    "cooking.stackexchange.com": "Water & Food",
+    "gardening.stackexchange.com": "Water & Food",
+
+    "ifixit_": "Repair & Build",
+    "appropedia_": "Repair & Build",
+    "cd3wd": "Repair & Build",
+    "diy.stackexchange.com": "Repair & Build",
+    "electronics.stackexchange.com": "Repair & Build",
+    "mechanics.stackexchange.com": "Repair & Build",
+    "woodworking.stackexchange.com": "Repair & Build",
+    "engineering.stackexchange.com": "Repair & Build",
+
+    "solar.lowtechmagazine.com": "Power & Energy",
+    "lowtechmagazine": "Power & Energy",
+    "ham.stackexchange.com": "Power & Energy",
+
+    "zimgit-": "Preparedness",
+    "ready.gov": "Preparedness",
+    "armypubs_": "Preparedness",
+    "trueprepper": "Preparedness",
+    "outdoors.stackexchange.com": "Preparedness",
+    "survivorlibrary": "Preparedness",
+
+    "libretexts.org_": "Learning",
+    "gutenberg_": "Learning",
+    "crashcourse_": "Learning",
+    "khanacademy_": "Learning",
+    "math.stackexchange.com": "Learning",
+    "physics.stackexchange.com": "Learning",
+    "chemistry.stackexchange.com": "Learning",
+    "biology.stackexchange.com": "Learning",
+    "earthscience.stackexchange.com": "Learning",
+    "sustainability.stackexchange.com": "Learning"
+  }
+}

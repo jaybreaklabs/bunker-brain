@@ -1,0 +1,26 @@
+[
+ {
+  "id": "Qwen/Qwen-Image-2.1-Turbo",
+  "createdAt": "2026-10-09T04:50:01.000Z"
+ },
+ {
+  "id": "Qwen/Qwen-Image-2.1-PE-I2I",
+  "createdAt": "2026-09-20T08:46:47.000Z"
+ },
+ {
+  "id": "Qwen/Qwen-Image-2.1-PE-T2I",
+  "createdAt": "2026-09-20T08:45:29.000Z"
+ },
+ {
+  "id": "Qwen/Qwen-Image-2.1",
+  "createdAt": "2026-09-14T03:47:26.000Z"
+ },
+ {
+  "id": "Qwen/Qwen-Drive-1.0-4B",
+  "createdAt": "2026-08-27T08:14:27.000Z"
+ },
+ {
+  "id": "Qwen/Qwen3.8-Flash-Next-FP8",
+  "createdAt": "2026-08-24T08:25:23.000Z"
+ }
+]

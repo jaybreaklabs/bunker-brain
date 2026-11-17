@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Map · Offline Library</title>
+<link rel="stylesheet" href="/vendor/maplibre-gl-6.16.0/maplibre-gl.css">
+<style>
+  html, body, #map { margin: 0; height: 100%; }
+  body { font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #ddd; }
+  @media (prefers-color-scheme: dark) { body { background: #222; } }
+  .bar {
+    position: absolute; top: 10px; left: 10px; z-index: 2; display: flex; gap: .5rem; align-items: center;
+  }
+  .bar a {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0 1rem; border-radius: 10px;
+    background: #fff; color: #0b5cad; font-weight: 600; text-decoration: none; box-shadow: 0 1px 4px rgba(0,0,0,.3);
+  }
+  #note {
+    position: absolute; left: 10px; right: 60px; bottom: 36px; z-index: 2; max-width: 420px;
+    padding: .6rem .8rem; border-radius: 10px; background: #fff4d6; color: #4a3800; font-size: .9rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.3);
+  }
+  #note[hidden] { display: none; }
+  .maplibregl-ctrl-group button { width: 44px; height: 44px; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="bar"><a href="/">&larr; Library</a></div>
+<p id="note" hidden></p>
+
+<script src="/vendor/pmtiles-4.5.0/pmtiles.js"></script>
+<script src="/vendor/protomaps-basemaps-5.7.2/basemaps.js"></script>
+<script type="module">
+import { Map as MapLibreMap, NavigationControl, GeolocateControl, ScaleControl, AttributionControl, addProtocol } from "/vendor/maplibre-gl-6.16.0/maplibre-gl.mjs";
+
+// Path to the PMTiles archive on this server (must support HTTP range requests).
+const TILES_URL = "/tiles/planet.pmtiles";
+const FONT = "Noto Sans Regular"; // the one glyph stack vendored in /vendor/basemaps-assets/fonts/
+const ASSETS = location.origin + "/vendor/basemaps-assets";
+
+const note = document.getElementById("note");
+const showNote = (msg) => { note.textContent = msg; note.hidden = false; };
+
+const protocol = new pmtiles.Protocol();
+addProtocol("pmtiles", protocol.tile);
+const archive = new pmtiles.PMTiles(location.origin + TILES_URL);
+protocol.add(archive);
+
+const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+const flavorName = dark ? "dark" : "light";
+const layers = basemaps.layers("protomaps", basemaps.namedFlavor(flavorName), { lang: "en" });
+for (const l of layers) if (l.layout?.["text-font"]) l.layout["text-font"] = [FONT];
+
+let header = null;
+try { header = await archive.getHeader(); } catch { showNote("Map tiles not found at " + TILES_URL + "."); }
+
+const map = new MapLibreMap({
+  container: "map",
+  // Start on the archive's extent: the whole world for the planet build, the city for a test extract.
+  bounds: header ? [header.minLon, header.minLat, header.maxLon, header.maxLat] : undefined,
+  maxZoom: 19,
+  attributionControl: false,
+  style: {
+    version: 8,
+    glyphs: ASSETS + "/fonts/{fontstack}/{range}.pbf",
+    sprite: ASSETS + "/sprites/v4/" + flavorName,
+    sources: {
+      protomaps: {
+        type: "vector",
+        url: "pmtiles://" + location.origin + TILES_URL,
+        attribution: "Protomaps © OpenStreetMap",
+      },
+    },
+    layers,
+  },
+});
+
+map.addControl(new NavigationControl(), "top-right");
+map.addControl(new ScaleControl({ unit: "metric" }), "bottom-left");
+map.addControl(new AttributionControl({ compact: true }), "bottom-right");
+
+if (window.isSecureContext && "geolocation" in navigator) {
+  const geo = new GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showAccuracyCircle: true });
+  map.addControl(geo, "top-right");
+  geo.on("error", (e) => showNote("Location unavailable: " + (e.message || "permission denied or no GPS fix") + "."));
+  navigator.permissions?.query({ name: "geolocation" })
+    .then((p) => { if (p.state === "denied") showNote("Location is blocked for this site. Allow it in your browser settings to see your position."); })
+    .catch(() => {});
+} else {
+  showNote("Live location needs HTTPS. Open this page over HTTPS for the GPS dot; browsing the map works here.");
+}
+</script>
+</body>
+</html>

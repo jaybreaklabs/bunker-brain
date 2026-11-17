@@ -1,0 +1,31 @@
+# Stack: offline-library-bulk — bulk download of library, maps and models.
+# Gentle mode (an uncapped ~1 Gbps torrent knocked a consumer modem offline): ONE container, lists run one after another,
+# total speed capped at 40 MB/s (~320 Mbit/s), few connections and torrent peers.
+# Lists come from fetch/build_lists.py, in $CONFIG_DIR/fetch/.
+# All output goes to $LIBRARY_DIR/bulk-console.log; aria2 logs and session
+# files (anything unfinished) land next to the lists. Re-start the stack to resume.
+services:
+  fetch:
+    image: alpine:3.20
+    container_name: offline-library-bulk
+    restart: "no"
+    volumes:
+      - ${LIBRARY_DIR:?set LIBRARY_DIR in .env}:/library
+      - ${MODELS_DIR:?set MODELS_DIR in .env}:/models
+      - ${CONFIG_DIR:?set CONFIG_DIR in .env}/fetch:/cfg
+    command:
+      - sh
+      - -c
+      - >-
+        exec >>/library/bulk-console.log 2>&1;
+        echo "start $$(date)"; apk add --no-cache aria2;
+        for l in library maps models; do
+        aria2c --input-file=/cfg/$$l.txt
+        --max-overall-download-limit=40M --max-concurrent-downloads=2
+        --split=4 --max-connection-per-server=4 --bt-max-peers=20 --seed-time=0
+        --continue=true --max-tries=10 --retry-wait=60 --file-allocation=none
+        --check-integrity=true --auto-file-renaming=false
+        --save-session=/cfg/$$l.session --log=/cfg/$$l.log --log-level=notice
+        --summary-interval=600 --console-log-level=warn;
+        echo "$$l finished with exit $$? at $$(date)";
+        done

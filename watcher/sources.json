@@ -1,0 +1,63 @@
+{
+  "sources": [
+    {
+      "id": "kiwix",
+      "type": "kiwix",
+      "group": "Library",
+      "zims_file": "../content/zims.json",
+      "default_zims": [
+        ["wikipedia_en_all", "maxi"],
+        ["wiktionary_en_all", "nopic"],
+        ["wikivoyage_en_all", "maxi"],
+        ["ifixit_en_all", ""],
+        ["mdwiki_en_all", "maxi"]
+      ]
+    },
+    {
+      "id": "protomaps",
+      "type": "protomaps",
+      "group": "Maps",
+      "url": "https://build-metadata.protomaps.dev/builds.json"
+    },
+    {
+      "id": "osmand",
+      "type": "osmand",
+      "group": "Maps",
+      "url": "https://download.osmand.net/get_indexes?gzip=true",
+      "groups": {
+        "OsmAnd US maps": "^Us_.*\\.obf\\.zip$",
+        "OsmAnd world maps": "\\.obf\\.zip$"
+      }
+    },
+    {
+      "id": "organicmaps",
+      "type": "github",
+      "group": "Maps",
+      "repos": ["organicmaps/organicmaps"]
+    },
+    {
+      "id": "huggingface",
+      "type": "huggingface",
+      "group": "Models",
+      "exclude": "(?i)-base$",
+      "orgs": [
+        "Qwen",
+        "google",
+        "deepseek-ai",
+        "nvidia",
+        "zai-org",
+        "mistralai",
+        "moonshotai",
+        "MiniMaxAI",
+        {"name": "unsloth", "include": "(?i)-GGUF$"},
+        {"name": "mlx-community", "include": "(?i)-4bit$"}
+      ]
+    },
+    {
+      "id": "runtimes",
+      "type": "github",
+      "group": "Runtimes",
+      "repos": ["ggml-org/llama.cpp", "ollama/ollama", "open-webui/open-webui", "kiwix/kiwix-tools"]
+    }
+  ]
+}

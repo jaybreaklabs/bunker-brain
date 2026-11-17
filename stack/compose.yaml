@@ -1,0 +1,12 @@
+# Stack: kiwix-serve for the library (phase 0 — kiwix only).
+# Host paths come from .env next to this file (see .env.example).
+services:
+  kiwix:
+    image: ghcr.io/kiwix/kiwix-serve:3.8.2
+    container_name: offline-library-kiwix
+    command: ["*.zim"]          # start script expands the glob inside /data
+    volumes:
+      - ${LIBRARY_DIR:?set LIBRARY_DIR in .env}/zim:/data:ro
+    ports:
+      - "8790:8080"
+    restart: unless-stopped

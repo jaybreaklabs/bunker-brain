@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+     xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Search: boil water</title>
+    <link>/search?pattern=boil%20water&amp;&amp;format=xml&amp;start=0&amp;pageLength=3</link>
+    <description>Search result for boil water</description>
+    <opensearch:totalResults>1,000</opensearch:totalResults>
+    <opensearch:startIndex>0</opensearch:startIndex>
+    <opensearch:itemsPerPage>3</opensearch:itemsPerPage>
+    <atom:link rel="search" type="application/opensearchdescription+xml" href="/search/searchdescription.xml"/>
+    <opensearch:Query role="request"
+      searchTerms="boil water"
+      startIndex="0"
+      count="3"
+    />
+    <item>
+      <title>Water</title>
+      <link>/content/wikivoyage_en_all_nopic_2026-09/Water</link>
+        <description>...<b>Water</b> This article is about <b>water</b> as a consumable. See <b>water</b> sport for activities in bodies of <b>water</b>. The quality and availability of drinking <b>water</b> vary between countries and regions. As a general rule, clean <b>water</b> is more difficult to get in hot weather, at low-income destinations and outside settlements. See dehydration for problems when the body becomes short of <b>water</b>. Understand Tap <b>water</b> “ <b>Water</b>, <b>water</b>, everywhere nor any drop to drink ” from The Rime of the Ancient Mariner Tap <b>water</b>......</description>
+        <book>
+          <title>Wikivoyage</title>
+        </book>
+        <wordCount>1,758</wordCount>
+    </item>
+    <item>
+      <title>Morne Trois Pitons National Park</title>
+      <link>/content/wikivoyage_en_all_nopic_2026-09/Morne_Trois_Pitons_National_Park</link>
+        <description>...<b>water</b> falls and lakes with crystal clear <b>water</b>. History The national park was just a forest area in 1940, since 1952 a forest reserve and since 1975 a national park — the first one on Dominica. In 1997 UNESCO declared the park a world heritage site. Today Morne Trois Pitons comprises an area of 6800 hectares, six signposted hiking paths complete with picnic sites and rain covers. Landscape There are four former volcanoes in the park. Morne Trois Pitons itself has a height of 1342 m. From its......</description>
+        <book>
+          <title>Wikivoyage</title>
+        </book>
+        <wordCount>871</wordCount>
+    </item>
+    <item>
+      <title>Dominica</title>
+      <link>/content/wikivoyage_en_all_nopic_2026-09/Dominica</link>
+        <description>...<b>water</b> activities for tubing and boat tours, giving Dominica the nickname the "Land of 365 Rivers." Terrain Rugged mountains of volcanic origin. Highest point Morne Diablotin 1,447 m History Dominica was the last of the Caribbean islands to be colonized by Europeans, due chiefly to the fierce resistance of the native Kalinago people (called "Caribs" by Europeans). France ceded possession to Great Britain in 1763, which made the island a colony in 1805. In 1980, two years after independence......</description>
+        <book>
+          <title>Wikivoyage</title>
+        </book>
+        <wordCount>4,230</wordCount>
+    </item>
+  </channel>
+</rss>

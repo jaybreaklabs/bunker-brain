@@ -1,0 +1,18 @@
+[
+ {
+  "key": "20261115.pmtiles",
+  "size": 139532869447,
+  "md5sum": "2TeUVzLIrMFfM8LneiDhzw==",
+  "b3sum": "77a87421aba19e2a6d71201939683fea0fabdea403ce2a2417d795945a0a6fe9",
+  "uploaded": "2026-11-15T09:09:48.528Z",
+  "version": "4.15.2"
+ },
+ {
+  "key": "20261116.pmtiles",
+  "size": 139535414652,
+  "md5sum": "YzHaNrmGgXtYpbRnuQ34pw==",
+  "b3sum": "a5b3a6ea7a0fdafb8469aa2c5801c82fbeac73adf69087dc521ca15b9f5add3b",
+  "uploaded": "2026-11-16T09:04:00.861Z",
+  "version": "4.15.2"
+ }
+]
