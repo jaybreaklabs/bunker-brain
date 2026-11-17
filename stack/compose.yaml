@@ -24,6 +24,8 @@ services:
     ports:
       - "8792:8080"
     restart: unless-stopped
+    # The first account to sign up becomes admin: create yours right after the first start,
+    # then turn off Admin → Settings → General → Enable New Sign Ups. Keep the port LAN/VPN-only.
     # Model connections (Ollama / OpenAI-compatible) are set in Admin → Connections.
     # The library tool reaches kiwix at http://kiwix:8080/library on this network.
 
