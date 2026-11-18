@@ -1,4 +1,4 @@
-# Stack: offline-library-bulk — bulk download of library, maps and models.
+# Stack: bunker-brain-bulk — bulk download of library, maps and models.
 # Gentle mode (an uncapped ~1 Gbps torrent knocked a consumer modem offline): ONE container, lists run one after another,
 # total speed capped at 40 MB/s (~320 Mbit/s), few connections and torrent peers.
 # Lists come from fetch/build_lists.py, in $CONFIG_DIR/fetch/.
@@ -7,7 +7,7 @@
 services:
   fetch:
     image: alpine:3.20
-    container_name: offline-library-bulk
+    container_name: bunker-brain-bulk
     restart: "no"
     volumes:
       - ${LIBRARY_DIR:?set LIBRARY_DIR in .env}:/library

@@ -3,7 +3,7 @@
 Monthly, notify-only. `watch.py` checks the sources in `sources.json`, compares
 them with the last run's state, and posts one digest as JSON to a webhook
 (`POST $WATCHER_ALERT_URL`, header `X-Bot-Secret`, fields `kind` `push`,
-`source`, `title`, `body`, `severity`, `key` `offline-library-YYYY-MM`). Python 3.11 stdlib only. Design: `SPEC.md` §8.
+`source`, `title`, `body`, `severity`, `key` `bunker-brain-YYYY-MM`). Python 3.11 stdlib only. Design: `SPEC.md` §8.
 
 | Source | What is compared |
 |---|---|

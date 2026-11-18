@@ -3,7 +3,7 @@
 services:
   web:
     image: caddy:2.11.6-alpine
-    container_name: offline-library-web
+    container_name: bunker-brain-web
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ${LIBRARY_DIR:?set LIBRARY_DIR in .env}/web:/srv:ro
@@ -16,7 +16,7 @@ services:
   chat:
     # Pinned: Open WebUI upgrades can migrate its database. Back up CONFIG_DIR/open-webui first.
     image: ghcr.io/open-webui/open-webui:v0.13.3
-    container_name: offline-library-chat
+    container_name: bunker-brain-chat
     environment:
       WEBUI_SECRET_KEY_FILE: /app/backend/data/.webui_secret_key   # keep logins across re-creates
       WEBUI_NAME: Bunker Brain   # shown as "Bunker Brain (Open WebUI)"
@@ -46,7 +46,7 @@ services:
 
   kiwix:
     image: ghcr.io/kiwix/kiwix-serve:3.8.2
-    container_name: offline-library-kiwix
+    container_name: bunker-brain-kiwix
     # The start script expands the glob inside /data. Restart after adding ZIMs.
     command: ["--urlRootLocation=/library", "*.zim"]
     volumes:

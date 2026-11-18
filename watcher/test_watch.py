@@ -48,13 +48,13 @@ def baseline_state():
 
 class WatchTest(unittest.TestCase):
     def test_first_run_records_baseline(self):
-        title, body, state = watch.run(CFG, {}, getter(fixtures()), {"offline-library": 410e9}, NOW)
+        title, body, state = watch.run(CFG, {}, getter(fixtures()), {"bunker-brain": 410e9}, NOW)
         self.assertIn("baseline recorded", title)
         self.assertIn("recorded 7 items from 5 sources", body)
         self.assertNotIn("→", body)
         self.assertEqual(state["kiwix"]["wikipedia_en_all maxi"]["d"], "2026-08")
         self.assertEqual(state["runtimes"]["ggml-org/llama.cpp"]["v"], "v1.0.0")
-        self.assertIn("Free: offline-library 410.0 GB", body)
+        self.assertIn("Free: bunker-brain 410.0 GB", body)
 
     def test_no_changes(self):
         title, body, _ = watch.run(CFG, baseline_state(), getter(fixtures()), {}, NOW)

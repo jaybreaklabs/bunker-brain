@@ -139,7 +139,7 @@ def parse_catalog(xml_text: str) -> list:
 
 
 def _get(url: str) -> str:
-    req = urllib.request.Request(url, headers={"User-Agent": "offline-library-tool"})
+    req = urllib.request.Request(url, headers={"User-Agent": "bunker-brain-tool"})
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
         return r.read().decode(r.headers.get_content_charset() or "utf-8", "replace")
 
