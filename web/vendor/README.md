@@ -13,6 +13,6 @@ the whole folder when upgrading and update this list.
 
 The map style comes from `basemaps.layers()` at runtime; every `text-font` is
 rewritten to the single vendored stack, `Noto Sans Regular`. Map tiles
-(`/tiles/planet.pmtiles`) are not vendored: on the NAS they live in
-`tank/offline-library/maps/`; locally `web/tiles/` holds a small git-ignored
+(`/tiles/planet.pmtiles`) are not vendored: on the server they live in
+`$LIBRARY_DIR/maps/`; locally `web/tiles/` holds a small git-ignored
 test extract.

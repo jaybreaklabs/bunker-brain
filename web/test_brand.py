@@ -23,6 +23,13 @@ class BrandTests(unittest.TestCase):
         self.assertEqual(set(site), set(PALETTE))
         self.assertEqual(site, chat)
 
+    def test_chat_paper_texture_matches_site_tokens(self):
+        texture = r"--bb-(?:texture[a-z-]*|rule-gap):[^;]+;"
+        site = re.findall(texture, (WEB / "brand/tokens.css").read_text())
+        chat = re.findall(texture, (ROOT / "stack/chat-brand/custom.css").read_text())
+        self.assertEqual(len(site), 5)
+        self.assertEqual(site, chat)
+
     def test_local_assets_exist_and_nothing_loads_from_the_internet(self):
         files = [WEB / "index.html", WEB / "map/index.html", WEB / "home.js", WEB / "library.js",
                  WEB / "brand/ui.js", WEB / "manifest.webmanifest"]
