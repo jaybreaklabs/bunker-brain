@@ -19,6 +19,8 @@ export const ICONS = {
   map: path("M2 6L8 3L16 6L22 3V18L16 21L8 18L2 21ZM8 3V18M16 6V21"),
   arrow: path("M5 12H19M13 6L19 12L13 18", 2),
   back: path("M19 12H5M11 6L5 12L11 18", 2),
+  search: path("M10.5 3A7.5 7.5 0 1 0 10.5 18A7.5 7.5 0 1 0 10.5 3ZM16 16L21 21", 2),
+  menu: path("M4 4H10V10H4ZM14 4H20V10H14ZM4 14H10V20H4ZM14 14H20V20H14Z", 1.6),
 };
 
 // el("a", { class: "x", href: "/" }, child, "text", null) -> <a>. null/false children are skipped.
@@ -35,7 +37,7 @@ export function icon(name) {
   return s;
 }
 
-const endArrow = () => el("span", { class: "bb-row__end", "aria-hidden": "true" }, "→");
+const endArrow = () => el("span", { class: "bb-row__end", "aria-hidden": "true" }, icon("arrow"));
 
 // A ruled list row. variant: "inline" (title and subtitle side by side on wide
 // screens) or "tall" (bigger title). end: "arrow" (default), a count string, or null.
@@ -62,6 +64,7 @@ export const index = (rows) => el("div", { class: "bb-index" }, rows);
 export function searchForm({ placeholder = "Search all books" } = {}) {
   const go = el("button", { type: "submit", "aria-label": "Search" }, icon("arrow"));
   return el("form", { class: "bb-search", action: "/library/search", method: "get", role: "search" },
+    icon("search"),
     el("input", { type: "search", name: "pattern", placeholder, "aria-label": placeholder, required: "" }),
     // kiwix-serve refuses mixed-language searches; leave multilingual books (still browsable) out. Matches the chat tool's EXCLUDE_TAGS.
     el("input", { type: "hidden", name: "books.filter.notag", value: "lowtech" }),
@@ -77,8 +80,24 @@ export function card({ href, image, title, sub }) {
       endArrow()));
 }
 
-export function button({ href, label, iconName, variant }) {
-  return el("a", { class: "bb-button" + (variant ? ` bb-button--${variant}` : ""), href }, iconName ? icon(iconName) : null, label);
+// variant: "soft", "paper" or "block"; several as "soft block".
+export function button({ href, label, iconName, variant, className }) {
+  const cls = ["bb-button", ...(variant || "").split(" ").filter(Boolean).map((v) => `bb-button--${v}`), className].filter(Boolean).join(" ");
+  return el("a", { class: cls, href }, iconName ? icon(iconName) : null, label);
+}
+
+// Header: on phones the nav folds behind a menu button. Call once per page.
+export function initHeader(header = document.querySelector(".bb-header")) {
+  const nav = header?.querySelector(".bb-nav");
+  if (!nav) return;
+  nav.id ||= "bb-nav";
+  const toggle = el("button", { class: "bb-header__menu", type: "button", "aria-label": "Menu", "aria-expanded": "false", "aria-controls": nav.id }, icon("menu"));
+  toggle.addEventListener("click", () => {
+    const open = header.classList.toggle("is-open");
+    toggle.setAttribute("aria-expanded", String(open));
+  });
+  nav.addEventListener("click", (e) => { if (e.target.closest("a")) { header.classList.remove("is-open"); toggle.setAttribute("aria-expanded", "false"); } });
+  nav.before(toggle);
 }
 
 export function strip(links) {

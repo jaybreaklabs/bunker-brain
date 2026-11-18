@@ -8,7 +8,7 @@ fonts only, no CDN, no web fonts.
 
 | File | What it is |
 |---|---|
-| `tokens.css` | Every colour, font, size and spacing value. Palette first, then *roles* (`--bb-bg`, `--bb-text`, `--bb-rule`…). Dark mode only re-points roles. |
+| `tokens.css` | Every colour, font, size and spacing value, plus the paper texture. Palette first, then *roles* (`--bb-bg`, `--bb-text`, `--bb-rule`…). The site is always paper (light). |
 | `components.css` | The components below. They read role tokens only. |
 | `ui.js` | ES module with one function per component, returning DOM nodes. |
 | `lockup-cream.png` | Logo + wordmark for the dark header bar. |
@@ -30,12 +30,13 @@ Pages load the two stylesheets and import from `ui.js`:
 
 | Function (`ui.js`) | Class | Use |
 |---|---|---|
-| (static markup) | `.bb-header`, `.bb-nav`, `.bb-main`, `.bb-footer` | Page frame: olive bar with logo and nav, content column, disclaimer footer. |
+| (static markup) + `initHeader()` | `.bb-header`, `.bb-nav`, `.bb-main`, `.bb-footer` | Page frame: olive bar with logo and nav (folds into a menu button on phones), content column, disclaimer footer. |
+| (class on `body`) | `.bb-paper` | Field-notebook paper: stipple and faint ruled lines. Tune with `--bb-rule-gap` and `--bb-texture-ink`, or set `--bb-texture: none`. |
 | `searchForm()` | `.bb-search` | Full-text search across all books (kiwix-serve). |
 | `row({href, title, sub, iconName, thumb, variant, end})` | `.bb-row`, `--inline`, `--tall` | One line of a ruled list: icon or thumbnail, title, subtitle, arrow or count. |
 | `index(rows)` | `.bb-index` | Ruled list that holds rows. |
 | `card({href, image, title, sub})` | `.bb-card` | Picture with a dark caption (the map preview). |
-| `button({href, label, iconName, variant})` | `.bb-button`, `--soft`, `--paper` | Solid, sand or floating paper button. |
+| `button({href, label, iconName, variant})` | `.bb-button`, `--soft`, `--paper`, `--block` | Solid, sand or floating paper button; `block` fills the width. |
 | `strip(links)` | `.bb-strip` | Wrapping line of small icon links. |
 | `crumb(parts)` | `.bb-crumb` | Breadcrumb, monospace. |
 | `linkList(links)` | `.bb-links` | "Around the house" links with a "No DNS?" fallback. |
@@ -50,8 +51,10 @@ Type helpers: `.bb-display` (page title), `.bb-heading`, `.bb-subheading`, `.bb-
   the five palette colours, change it in `stack/chat-brand/custom.css` too;
   `web/test_brand.py` fails until they match.
 - **A subject's name, icon, order or blurb:** `SUBJECTS` in `web/library.js`.
-- **A new page:** load the two stylesheets, use `.bb-header`/`.bb-main`/`.bb-footer`,
-  build content with `ui.js`. Keep page-only CSS to layout.
+- **The paper texture:** `--bb-texture*` and `--bb-rule-gap` in `tokens.css`.
+- **A new page:** load the two stylesheets, put `bb-paper` on `body`, use
+  `.bb-header`/`.bb-main`/`.bb-footer`, call `initHeader()`, build content with
+  `ui.js`. Keep page-only CSS to layout.
 
 ## Palette
 
@@ -59,7 +62,7 @@ Type helpers: `.bb-display` (page title), `.bb-heading`, `.bb-subheading`, `.bb-
 |---|---|---|
 | `--bb-bunker-olive` | `#293420` | Mark, headings, header bar |
 | `--bb-field-olive` | `#495435` | Secondary ink and rules |
-| `--bb-ochre` | `#C5A646` | Selected actions, citations, dark-mode buttons |
+| `--bb-ochre` | `#C5A646` | Selected actions, citations |
 | `--bb-sand` | `#E7DFC9` | Secondary panels, footer |
 | `--bb-paper` | `#F7F2E5` | Reading surface, reverse mark |
 

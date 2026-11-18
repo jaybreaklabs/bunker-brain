@@ -5,8 +5,9 @@
  *
  * 1. Palette: the five brand colours. Don't use them directly in components.
  * 2. Roles: what a colour is for (background, text, rule…). Components use these.
- *    Dark mode only re-points roles; the palette never changes.
- * 3. Type and layout scales.
+ *    The site is always paper (light), like a field notebook, whatever the device theme.
+ * 3. Paper texture: stipple and ruled lines behind the page.
+ * 4. Type and layout scales.
  *
  * stack/chat-brand/custom.css repeats the palette block for the chat app (it runs
  * on another origin); web/test_brand.py checks the two stay in sync.
@@ -31,7 +32,9 @@
   --bb-ochre-dark: #917319;
   --bb-alert: #b00020;
 
-  /* 2. Roles (light / paper) */
+  color-scheme: light;
+
+  /* 2. Roles */
   --bb-bg: var(--bb-paper);
   --bb-text: var(--bb-bunker-olive);
   --bb-muted: var(--bb-moss);
@@ -48,7 +51,15 @@
   --bb-accent: var(--bb-ochre);           /* citations, selected actions */
   --bb-focus: var(--bb-ochre-dark);
 
-  /* 3. Type: system fonts only, so nothing is fetched from the internet */
+  /* 3. Paper texture. Drawn in CSS and an inline SVG, so nothing is downloaded.
+     --bb-texture-ink tints both layers; set --bb-texture to none to turn it off. */
+  --bb-texture-ink: 41 52 32;             /* bunker olive as r g b */
+  --bb-rule-gap: 32px;                    /* space between ruled lines */
+  --bb-texture-rules: repeating-linear-gradient(to bottom, transparent 0 calc(var(--bb-rule-gap) - 1px), rgb(var(--bb-texture-ink) / .07) calc(var(--bb-rule-gap) - 1px) var(--bb-rule-gap));
+  --bb-texture-stipple: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .2 0 0 0 0 .13 0 0 0 -2.2 1.35'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='0 0 0 0 .38'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+  --bb-texture: var(--bb-texture-stipple), var(--bb-texture-rules);
+
+  /* 4. Type: system fonts only, so nothing is fetched from the internet */
   --bb-serif: Georgia, "DejaVu Serif", "Times New Roman", serif;
   --bb-sans: Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif;
   --bb-mono: Menlo, "DejaVu Sans Mono", Consolas, monospace;
@@ -67,21 +78,4 @@
   --bb-gutter: 4%;
   --bb-touch: 44px;                       /* minimum tap target */
   --bb-radius: 3px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bb-bg: var(--bb-olive-night);
-    --bb-text: #ece5d0;
-    --bb-muted: #b3b49a;
-    --bb-rule: #8a9668;
-    --bb-line: #46523a;
-    --bb-panel: var(--bb-olive-dusk);
-    --bb-field: var(--bb-olive-deep);
-    --bb-hover: #253020;
-    --bb-bar: var(--bb-olive-deep);
-    --bb-btn: var(--bb-ochre);
-    --bb-btn-text: var(--bb-olive-night);
-    --bb-focus: var(--bb-ochre-light);
-  }
 }

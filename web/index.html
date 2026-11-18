@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="light">
 <meta name="theme-color" content="#293420">
 <title>Field library · Bunker Brain</title>
 <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml">
@@ -18,17 +18,19 @@
   .home-side .bb-card { margin-bottom: 20px; }
   .home-tools > .bb-row:first-child { border-top: 2px solid var(--bb-rule); }
   .home-house { margin-top: 36px; }
-  .home-pocket { display: none; }
+  .home-pocket, .home-phone-only { display: none; }
   @media (max-width: 750px) {
     .home-layout { display: block; }
     .home-side { display: none; }
     .home-pocket { display: grid; grid-template-columns: 1fr 1.3fr; gap: 7px; margin: -12px 0 28px; }
     .home-pocket img { grid-row: span 2; width: 100%; height: 100%; min-height: 96px; object-fit: cover; }
     .home-pocket--solo .bb-button { grid-row: span 2; }
+    .home-lead { display: none; }
+    .home-phone-only { display: flex; margin: -12px 0 28px; }
   }
 </style>
 </head>
-<body>
+<body class="bb-paper">
 <header class="bb-header">
   <div class="bb-header__inner">
     <a href="#" aria-label="Bunker Brain home"><img class="bb-header__logo" src="/brand/lockup-cream.png" alt="Bunker Brain" width="220" height="32"></a>
@@ -43,7 +45,7 @@
 
 <main class="bb-main" id="page" tabindex="-1"><p class="bb-status">Loading library…</p></main>
 
-<footer class="bb-footer">Medical and survival content here is reference material, not professional care. In an emergency, call for help first.</footer>
+<footer class="bb-footer"><p>Medical and survival content here is reference material, not professional care. In an emergency, call for help first.</p></footer>
 
 <script type="module" src="/home.js"></script>
 </body>

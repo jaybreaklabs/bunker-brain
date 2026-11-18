@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="light">
 <title>Offline map · Bunker Brain</title>
 <link rel="icon" href="/brand/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/brand/favicon-32.png" sizes="32x32" type="image/png">
@@ -51,8 +51,7 @@ addProtocol("pmtiles", protocol.tile);
 const archive = new pmtiles.PMTiles(location.origin + TILES_URL);
 protocol.add(archive);
 
-const dark = matchMedia("(prefers-color-scheme: dark)").matches;
-const flavorName = dark ? "dark" : "light";
+const flavorName = "light"; // matches the paper look of the rest of the site
 const layers = basemaps.layers("protomaps", basemaps.namedFlavor(flavorName), { lang: "en" });
 for (const l of layers) if (l.layout?.["text-font"]) l.layout["text-font"] = [FONT];
 

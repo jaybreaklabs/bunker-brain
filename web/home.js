@@ -1,6 +1,6 @@
 // Landing page views: home, all books (#books) and one subject (#subject/<name>).
 // Data comes from library.js, building blocks from /brand/ui.js.
-import { el, row, index, searchForm, card, button, strip, crumb, linkList, status, alert, setCurrentNav } from "/brand/ui.js";
+import { el, row, index, searchForm, card, button, strip, crumb, linkList, status, alert, setCurrentNav, initHeader } from "/brand/ui.js";
 import { subjectByName, loadLibrary, loadLinks, booksIn, visibleSubjects, lib } from "/library.js";
 
 const state = { books: null, dev: false, error: false, chatUrl: null, links: [] };
@@ -29,13 +29,14 @@ function homeView() {
 
   const content = el("section", {},
     el("h1", { class: "bb-display" }, "Field library"),
-    el("p", { class: "bb-lead" }, "Survival guides, repair manuals and reference books."),
+    el("p", { class: "bb-lead home-lead" }, "Survival guides, repair manuals and reference books."),
     searchForm(), shortcuts, notices(),
     el("h2", { class: "bb-heading" }, "Survival guides"),
     index(survival.map((s) => row({
       href: subjectHref(s.name), title: s.name, iconName: s.icon, variant: "inline",
       sub: booksIn(state.books, s.name).slice(0, 2).map((b) => b.title).join(" · "),
     }))),
+    button({ href: "#books", label: "Browse all books", iconName: "book", variant: "soft block", className: "home-phone-only" }),
     el("h3", { class: "bb-subheading" }, "More subjects"),
     strip(more.map((s) => ({ href: subjectHref(s.name), label: s.name, iconName: s.icon }))),
     state.links.length ? el("div", { class: "home-house" }, el("h3", { class: "bb-subheading" }, "Around the house"), linkList(state.links)) : null);
@@ -87,6 +88,7 @@ function render(moveFocus) {
   if (moveFocus) { window.scrollTo(0, 0); page.focus(); }
 }
 
+initHeader();
 window.addEventListener("hashchange", () => render(true));
 render();
 
