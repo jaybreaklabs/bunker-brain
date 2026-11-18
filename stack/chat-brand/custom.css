@@ -29,6 +29,21 @@
   --color-gray-900: oklch(0.22 0.03 130);
   --color-gray-950: oklch(0.18 0.025 130);
   --color-white: var(--bb-paper);
+
+  /* Paper texture (same values as web/brand/tokens.css) */
+  --bb-texture-ink: 41 52 32;             /* bunker olive as r g b */
+  --bb-rule-gap: 32px;                    /* space between ruled lines */
+  --bb-texture-rules: repeating-linear-gradient(to bottom, transparent 0 calc(var(--bb-rule-gap) - 1px), rgb(var(--bb-texture-ink) / .07) calc(var(--bb-rule-gap) - 1px) var(--bb-rule-gap));
+  --bb-texture-stipple: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .16 0 0 0 0 .2 0 0 0 0 .13 0 0 0 -2.2 1.35'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='0 0 0 0 .38'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+  --bb-texture: var(--bb-texture-stipple), var(--bb-texture-rules);
+}
+
+/* Field-notebook paper behind the light theme, like the site. The app shell is the
+ * full-height bg-white div; body sits behind the top bar. Dark mode stays plain olive. */
+html:not(.dark) body,
+html:not(.dark) body div.h-screen.bg-white {
+  background-color: var(--bb-paper);
+  background-image: var(--bb-texture);
 }
 
 /* Headings in answers use the brand serif */

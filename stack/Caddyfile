@@ -5,7 +5,8 @@
 	@kiwix_home path /library /library/
 	redir @kiwix_home /#books 302
 
-	handle /library* {
+	# /library/* (not /library*) so site files like /library.js stay local.
+	handle /library/* {
 		reverse_proxy kiwix:8080
 	}
 	handle {
