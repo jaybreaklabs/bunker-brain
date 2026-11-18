@@ -1,7 +1,24 @@
-# Bunker Brain
+<p align="center">
+  <img src="docs/readme/banner.svg" alt="Bunker Brain: an offline library that keeps working when the internet doesn't" width="100%">
+</p>
 
-A self-hosted library that keeps working when the internet doesn't. It runs on a
-home server and is reached from phones and laptops on the LAN or over a VPN.
+<p align="center">
+  <a href="LICENSE"><img src="docs/readme/badge-license.svg" alt="License: Apache-2.0" height="24"></a>
+  <img src="docs/readme/badge-offline.svg" alt="Works offline" height="24">
+  <img src="docs/readme/badge-python.svg" alt="Python: stdlib only" height="24">
+  <img src="docs/readme/badge-build.svg" alt="Build step: none" height="24">
+</p>
+
+A self-hosted library for the day the internet goes quiet. It runs on a home
+server and is reached from phones and laptops on the LAN or over a VPN: an
+encyclopedia shelf, survival and repair manuals, a world map that follows your
+GPS, and a local AI that answers from the books and cites its pages.
+
+## What's inside
+
+<p align="center">
+  <img src="docs/readme/features.svg" alt="Library, Map, Chat, Model archive, Watcher" width="100%">
+</p>
 
 - **Library**: Wikipedia, its sister projects, and survival, repair and medical
   collections as Kiwix ZIM files, served by `kiwix-serve` behind a branded
@@ -20,6 +37,17 @@ weights are committed or redistributed; you download them from their sources.
 [WHATS-IN-IT.md](WHATS-IN-IT.md) lists the full set (about 1.75 TB), and
 [SPEC.md](SPEC.md) explains the design and the choices behind it.
 
+## A look around
+
+<p align="center">
+  <img src="docs/readme/screen-home.png" alt="The Field library home page: search, survival guide subjects, the offline map card and Ask the library" width="100%">
+</p>
+<p align="center">
+  <img src="docs/readme/screens-phone.jpg" alt="Phone screens: Ask the library with a cited answer, the offline map, and the All books catalog" width="100%"><br>
+  <sub>Screens from the Contour Atlas design kit.</sub>
+</p>
+
+> [!WARNING]
 > Medical and survival content is reference material, not professional care.
 > In an emergency, call for help first.
 
@@ -73,3 +101,10 @@ are accepted under the same license (section 5). Vendored files keep their own
 licenses, listed in [web/vendor/README.md](web/vendor/README.md). Library
 content, maps and models are not part of this repo and carry their sources'
 licenses.
+
+---
+
+<p align="center">
+  <img src="docs/readme/mark.svg" width="36" alt="Bunker Brain mark"><br>
+  <sub>Built to sit on the shelf, not in the cloud.</sub>
+</p>

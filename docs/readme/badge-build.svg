@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 24" width="140" height="24" role="img">
+<title>build step: none</title>
+<clipPath id="r"><rect width="140" height="24" rx="4"/></clipPath>
+<g clip-path="url(#r)"><rect width="92" height="24" fill="#293420"/><rect x="92" width="48" height="24" fill="#E7DFC9"/><rect x="89" width="3" height="24" fill="#C5A646"/></g>
+<g font-family="Menlo, 'DejaVu Sans Mono', Consolas, monospace" font-size="12" letter-spacing=".2"><text x="10" y="16" fill="#F7F2E5">build step</text><text x="102" y="16" fill="#293420">none</text></g>
+</svg>
