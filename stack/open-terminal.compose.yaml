@@ -1,0 +1,12 @@
+# Optional overlay. Run with compose.yaml under the same Compose project.
+services:
+  open-terminal:
+    image: ghcr.io/open-webui/open-terminal:0.17.20-agents@sha256:8b3bf95e2d23446dea3847411a39f3e9b871540ff3a3715633d6ea3e52657c0e
+    environment:
+      OPEN_TERMINAL_API_KEY: ${OPEN_TERMINAL_API_KEY:?set a random Open Terminal key in stack/.env}
+    volumes:
+      - terminal-home:/home/user
+    restart: unless-stopped
+
+volumes:
+  terminal-home:
