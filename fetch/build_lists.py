@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "lists"
-UA = {"User-Agent": "offline-library-fetch"}
+UA = {"User-Agent": "bunker-brain-fetch"}
 HAVE = {"wikivoyage_en_all", "zimgit-water_en", "survivorlibrary.com_en_all"}  # already on the NAS
 
 

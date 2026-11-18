@@ -20,7 +20,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 DEFAULT_STATE = "watcher-state.json"
-UA = "offline-library-watcher/1.0"
+UA = "bunker-brain-watcher/1.0"
 MAX_BODY_BYTES = 55_000  # receiver rejects requests over 64 KiB; leave room for the envelope
 GROUPS = ["Library", "Maps", "Models", "Runtimes"]
 ATOM = "{http://www.w3.org/2005/Atom}"
@@ -255,8 +255,8 @@ def load_env(env_file):
 
 
 def post(url, title, body, secret, now):
-    payload = {"kind": "push", "source": "offline-library", "title": title, "body": body,
-               "severity": "info", "key": f"offline-library-{now:%Y-%m}", "entity": "", "url": ""}
+    payload = {"kind": "push", "source": "bunker-brain", "title": title, "body": body,
+               "severity": "info", "key": f"bunker-brain-{now:%Y-%m}", "entity": "", "url": ""}
     req = urllib.request.Request(url, data=json.dumps(payload).encode(), method="POST",
                                  headers={"Content-Type": "application/json", "User-Agent": UA,
                                           "X-Bot-Secret": secret})

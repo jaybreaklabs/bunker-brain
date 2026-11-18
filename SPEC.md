@@ -1,7 +1,7 @@
 # Offline Library — Design Spec
 
-Status: draft, 2026-11-17. Project name: `bunker-brain` (internal paths and
-stack names still say `offline-library`). Examples use `wiki.example.com`.
+Status: draft, 2026-11-17. Project name: `bunker-brain` (stacks, containers
+and paths use it too). Examples use `wiki.example.com`.
 
 ## 1. Goal
 
@@ -313,10 +313,10 @@ posted to a webhook (e.g. a Discord bot):
 
 - `POST $WATCHER_ALERT_URL`, header `X-Bot-Secret` (from a
   git-ignored env file), body
-  `{"kind":"push","source":"offline-library","title":…,"body":…,"severity":"info","key":"offline-library-YYYY-MM"}`.
+  `{"kind":"push","source":"bunker-brain","title":…,"body":…,"severity":"info","key":"bunker-brain-YYYY-MM"}`.
 - Lines like: `Wikipedia maxi 2026-08 → 2026-11, +127 G, 410 G free`.
 
-Download step (manual in v1): the `offline-library-fetch` Dockge stack
+Download step (manual in v1): the `bunker-brain-fetch` Dockge stack
 (`stack/fetch.compose.yaml`) runs aria2 on the item's `.torrent` into
 `incoming/`. Then verify the published hash (meta4 / md5 / b3sum / sha256),
 move it into place, remove the old file, and post a confirmation.

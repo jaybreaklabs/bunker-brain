@@ -1,10 +1,10 @@
-# Stack: offline-library-fetch — one-shot large downloads via aria2 (torrent + web seeds).
+# Stack: bunker-brain-fetch — one-shot large downloads via aria2 (torrent + web seeds).
 # Edit URL, start the stack, it exits when done. Files land in $LIBRARY_DIR/incoming
 # and are moved into zim/ only after a SHA-256 check against the Kiwix .meta4.
 services:
   aria2:
     image: alpine:3.20
-    container_name: offline-library-fetch
+    container_name: bunker-brain-fetch
     restart: "no"
     volumes:
       - ${LIBRARY_DIR:?set LIBRARY_DIR in .env}/incoming:/incoming
