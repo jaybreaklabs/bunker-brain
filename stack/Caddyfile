@@ -1,5 +1,10 @@
 # TLS is terminated by the reverse proxy in front of this stack.
 :80 {
+	# Kiwix's own catalog page goes to the branded "All books" page instead.
+	# Books, search and the catalog feed under /library/... are untouched.
+	@kiwix_home path /library /library/
+	redir @kiwix_home /#books 302
+
 	handle /library* {
 		reverse_proxy kiwix:8080
 	}

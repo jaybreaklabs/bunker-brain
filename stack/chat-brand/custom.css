@@ -1,0 +1,41 @@
+/* Bunker Brain theme for Open WebUI (v0.13.x).
+ *
+ * Open WebUI loads /static/custom.css after its own styles. Its colours come from
+ * Tailwind variables (--color-gray-*, --color-white), so re-pointing those turns
+ * every grey surface into the brand's paper-to-olive ramp without touching
+ * individual components. Light mode reads like paper, dark mode like the olive bar.
+ *
+ * The palette block must match web/brand/tokens.css (checked by web/test_brand.py).
+ */
+:root {
+  /* Palette (same values as web/brand/tokens.css) */
+  --bb-bunker-olive: #293420;
+  --bb-field-olive: #495435;
+  --bb-ochre: #c5a646;
+  --bb-sand: #e7dfc9;
+  --bb-paper: #f7f2e5;
+
+  /* Grey ramp tinted toward olive: 50 is paper, 950 is near-black olive */
+  --color-gray-50: oklch(0.965 0.016 88);
+  --color-gray-100: oklch(0.925 0.024 88);
+  --color-gray-200: oklch(0.89 0.028 90);
+  --color-gray-300: oklch(0.82 0.03 95);
+  --color-gray-400: oklch(0.72 0.03 105);
+  --color-gray-500: oklch(0.62 0.035 115);
+  --color-gray-600: oklch(0.5 0.04 122);
+  --color-gray-700: oklch(0.42 0.045 125);
+  --color-gray-800: oklch(0.32 0.04 128);
+  --color-gray-850: oklch(0.27 0.035 130);
+  --color-gray-900: oklch(0.22 0.03 130);
+  --color-gray-950: oklch(0.18 0.025 130);
+  --color-white: var(--bb-paper);
+}
+
+/* Headings in answers use the brand serif */
+.markdown-prose h1, .markdown-prose h2, .markdown-prose h3 {
+  font-family: Georgia, "DejaVu Serif", "Times New Roman", serif;
+}
+
+/* Links and citations pick up ochre */
+.markdown-prose a { text-decoration-color: var(--bb-ochre); text-underline-offset: 3px; }
+::selection { background: color-mix(in srgb, var(--bb-ochre) 45%, transparent); }

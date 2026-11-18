@@ -1,0 +1,87 @@
+/* Bunker Brain design tokens (Contour Atlas identity).
+ *
+ * The one place colours, type and spacing are defined. Every page and component
+ * reads these variables; change a value here and it changes everywhere.
+ *
+ * 1. Palette: the five brand colours. Don't use them directly in components.
+ * 2. Roles: what a colour is for (background, text, rule…). Components use these.
+ *    Dark mode only re-points roles; the palette never changes.
+ * 3. Type and layout scales.
+ *
+ * stack/chat-brand/custom.css repeats the palette block for the chat app (it runs
+ * on another origin); web/test_brand.py checks the two stay in sync.
+ */
+:root {
+  /* 1. Palette */
+  --bb-bunker-olive: #293420;
+  --bb-field-olive: #495435;
+  --bb-ochre: #c5a646;
+  --bb-sand: #e7dfc9;
+  --bb-paper: #f7f2e5;
+
+  /* Supporting shades derived from the palette */
+  --bb-olive-night: #1c2416;
+  --bb-olive-deep: #141a0f;
+  --bb-olive-dusk: #2a3421;
+  --bb-moss: #59634e;
+  --bb-khaki-line: #b8b59d;
+  --bb-cream-field: #fffdf4;
+  --bb-sand-hover: #ebe5d4;
+  --bb-ochre-light: #f0d681;
+  --bb-ochre-dark: #917319;
+  --bb-alert: #b00020;
+
+  /* 2. Roles (light / paper) */
+  --bb-bg: var(--bb-paper);
+  --bb-text: var(--bb-bunker-olive);
+  --bb-muted: var(--bb-moss);
+  --bb-rule: var(--bb-field-olive);       /* heavy rules under headings */
+  --bb-line: var(--bb-khaki-line);        /* hairlines between rows */
+  --bb-panel: var(--bb-sand);             /* secondary panels, footer */
+  --bb-field: var(--bb-cream-field);      /* inputs */
+  --bb-hover: var(--bb-sand-hover);
+  --bb-bar: var(--bb-bunker-olive);       /* header and dark cards */
+  --bb-bar-text: var(--bb-paper);
+  --bb-bar-current: var(--bb-ochre-light);
+  --bb-btn: var(--bb-bunker-olive);
+  --bb-btn-text: var(--bb-paper);
+  --bb-accent: var(--bb-ochre);           /* citations, selected actions */
+  --bb-focus: var(--bb-ochre-dark);
+
+  /* 3. Type: system fonts only, so nothing is fetched from the internet */
+  --bb-serif: Georgia, "DejaVu Serif", "Times New Roman", serif;
+  --bb-sans: Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif;
+  --bb-mono: Menlo, "DejaVu Sans Mono", Consolas, monospace;
+  --bb-text-xs: 13px;
+  --bb-text-sm: 14px;
+  --bb-text-md: 16px;
+  --bb-text-lg: 18px;
+  --bb-title-sm: 21px;
+  --bb-title-md: 24px;
+  --bb-title-lg: 30px;
+  --bb-display: clamp(42px, 5.5vw, 72px);
+
+  /* Layout */
+  --bb-max: 1200px;
+  --bb-narrow: 760px;
+  --bb-gutter: 4%;
+  --bb-touch: 44px;                       /* minimum tap target */
+  --bb-radius: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bb-bg: var(--bb-olive-night);
+    --bb-text: #ece5d0;
+    --bb-muted: #b3b49a;
+    --bb-rule: #8a9668;
+    --bb-line: #46523a;
+    --bb-panel: var(--bb-olive-dusk);
+    --bb-field: var(--bb-olive-deep);
+    --bb-hover: #253020;
+    --bb-bar: var(--bb-olive-deep);
+    --bb-btn: var(--bb-ochre);
+    --bb-btn-text: var(--bb-olive-night);
+    --bb-focus: var(--bb-ochre-light);
+  }
+}

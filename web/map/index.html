@@ -4,42 +4,44 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>Map · Offline Library</title>
+<title>Offline map · Bunker Brain</title>
+<link rel="icon" href="/brand/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/brand/app-icon-180.png">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="stylesheet" href="/vendor/maplibre-gl-6.16.0/maplibre-gl.css">
+<link rel="stylesheet" href="/brand/tokens.css">
+<link rel="stylesheet" href="/brand/components.css">
 <style>
-  html, body, #map { margin: 0; height: 100%; }
-  body { font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #ddd; }
-  @media (prefers-color-scheme: dark) { body { background: #222; } }
-  .bar {
-    position: absolute; top: 10px; left: 10px; z-index: 2; display: flex; gap: .5rem; align-items: center;
-  }
-  .bar a {
-    display: inline-flex; align-items: center; min-height: 44px; padding: 0 1rem; border-radius: 10px;
-    background: #fff; color: #0b5cad; font-weight: 600; text-decoration: none; box-shadow: 0 1px 4px rgba(0,0,0,.3);
-  }
-  #note {
-    position: absolute; left: 10px; right: 60px; bottom: 36px; z-index: 2; max-width: 420px;
-    padding: .6rem .8rem; border-radius: 10px; background: #fff4d6; color: #4a3800; font-size: .9rem;
-    box-shadow: 0 1px 4px rgba(0,0,0,.3);
-  }
-  #note[hidden] { display: none; }
-  .maplibregl-ctrl-group button { width: 44px; height: 44px; }
+  /* Page layout only; buttons and notes come from /brand/components.css. */
+  html, body, #map { height: 100%; }
+  body { background: var(--bb-panel); }
+  .map-back { position: absolute; top: 10px; left: 10px; z-index: 2; }
+  #note { position: absolute; left: 10px; right: 60px; bottom: 36px; z-index: 2; max-width: 420px; }
+  /* MapLibre controls in brand colours */
+  .maplibregl-ctrl-group { background: var(--bb-paper); border-radius: 2px; }
+  .maplibregl-ctrl-group button { width: var(--bb-touch); height: var(--bb-touch); }
+  .maplibregl-ctrl-group button + button { border-top-color: var(--bb-khaki-line); }
+  .maplibregl-ctrl-scale { background: var(--bb-paper); color: var(--bb-bunker-olive); border-color: var(--bb-bunker-olive); }
 </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="bar"><a href="/">&larr; Library</a></div>
-<p id="note" hidden></p>
+<div class="map-back" id="back"></div>
+<p id="note" class="bb-note" hidden></p>
 
 <script src="/vendor/pmtiles-4.5.0/pmtiles.js"></script>
 <script src="/vendor/protomaps-basemaps-5.7.2/basemaps.js"></script>
 <script type="module">
+import { button } from "/brand/ui.js";
 import { Map as MapLibreMap, NavigationControl, GeolocateControl, ScaleControl, AttributionControl, addProtocol } from "/vendor/maplibre-gl-6.16.0/maplibre-gl.mjs";
 
 // Path to the PMTiles archive on this server (must support HTTP range requests).
 const TILES_URL = "/tiles/planet.pmtiles";
 const FONT = "Noto Sans Regular"; // the one glyph stack vendored in /vendor/basemaps-assets/fonts/
 const ASSETS = location.origin + "/vendor/basemaps-assets";
+
+document.getElementById("back").append(button({ href: "/", label: "Library", iconName: "back", variant: "paper" }));
 
 const note = document.getElementById("note");
 const showNote = (msg) => { note.textContent = msg; note.hidden = false; };
