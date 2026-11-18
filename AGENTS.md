@@ -66,6 +66,7 @@ SPEC.md              design and decisions
 AGENTS.md            this file (CLAUDE.md imports it)
 WHATS-IN-IT.md       shareable list of the content and models
 content/zims.json    library manifest (+ check/test scripts)
+content/knowledge/   curated safety quick reference (official sources, dated) for the chat's knowledge base
 fetch/               builds aria2 input lists for the bulk download
 stack/               compose stacks: kiwix, one-shot fetch, bulk fetch
 web/                 landing page, collections, map page, vendored JS/fonts
