@@ -3,7 +3,7 @@
  * Open WebUI loads /static/custom.css after its own styles. Its colours come from
  * Tailwind variables (--color-gray-*, --color-white), so re-pointing those turns
  * every grey surface into the brand's paper-to-olive ramp without touching
- * individual components. Light mode reads like paper, dark mode like the olive bar.
+ * individual components. Dark conversations use a black field with warm paper grain.
  *
  * The palette block must match web/brand/tokens.css (checked by web/test_brand.py).
  */
@@ -39,11 +39,33 @@
 }
 
 /* Field-notebook paper behind the light theme, like the site. The app shell is the
- * full-height bg-white div; body sits behind the top bar. Dark mode stays plain olive. */
+ * full-height bg-white div; body sits behind the top bar. */
 html:not(.dark) body,
 html:not(.dark) body div.h-screen.bg-white {
   background-color: var(--bb-paper);
   background-image: var(--bb-texture);
+}
+
+/* The pane contains both the welcome screen and the message list in v0.13.x.
+ * Use the paper grain as an alpha mask so the same dots catch light on black. */
+html.dark #chat-pane {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--color-black, black);
+  background-image: repeating-linear-gradient(
+    transparent 0 calc(var(--bb-rule-gap) - 1px),
+    color-mix(in srgb, var(--bb-sand) 7%, transparent) 0 var(--bb-rule-gap));
+}
+
+html.dark #chat-pane::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--bb-sand);
+  opacity: .25;
+  mask-image: var(--bb-texture-stipple);
 }
 
 /* Headings in answers use the brand serif */
