@@ -1,0 +1,7 @@
+Bunker Brain
+Copyright 2026 The Bunker Brain Authors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+It bundles third-party files under their own licenses; see web/vendor/README.md
+and the license file in each vendored folder.

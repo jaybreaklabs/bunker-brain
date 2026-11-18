@@ -65,3 +65,11 @@ step, so it works fully offline. Tests: `python3 -m unittest` in `tools/`,
 
 Read [AGENTS.md](AGENTS.md) first: it holds the house rules (nothing personal
 in the repo, verify downloads by hash, pin sources, no Docker socket mounts).
+
+## License
+
+Apache License 2.0; see [LICENSE](LICENSE) and [NOTICE](NOTICE). Contributions
+are accepted under the same license (section 5). Vendored files keep their own
+licenses, listed in [web/vendor/README.md](web/vendor/README.md). Library
+content, maps and models are not part of this repo and carry their sources'
+licenses.
