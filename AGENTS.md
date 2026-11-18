@@ -70,6 +70,8 @@ content/knowledge/   curated safety quick reference (official sources, dated) fo
 fetch/               builds aria2 input lists for the bulk download
 stack/               compose stacks: kiwix, one-shot fetch, bulk fetch
 web/                 landing page, collections, map page, vendored JS/fonts
+web/brand/           design system: tokens, components, logo and icons (see its README)
+stack/chat-brand/    Open WebUI name, logo and theme, from the same tokens
 tools/               Open WebUI library-search tool + tests
 watcher/             release watcher (stdlib Python) + tests
 local/               git-ignored: the operator's own deployment notes
@@ -81,6 +83,8 @@ local/               git-ignored: the operator's own deployment notes
   pytest. One small test per non-trivial piece of logic.
 - **Web**: plain HTML/CSS/JS, no build step. Must work on a phone and fully
   offline: no CDN links, fonts or scripts from the internet.
+- **Look**: build pages from `web/brand/` (tokens, components, `ui.js`); keep
+  page-only CSS to layout. Colours live in `tokens.css` only.
 - **Keep it small.** Prefer an existing tool's feature over new code.
 
 ## Model briefs
