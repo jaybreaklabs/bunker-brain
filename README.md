@@ -80,6 +80,7 @@ The release watcher is a single stdlib Python script run from cron; see
 | `stack/` | Compose stacks: the site (Caddy, kiwix-serve, Open WebUI) and the download stacks |
 | `web/` | Landing page, collections, map page; `web/brand/` is the design system; vendored JS and fonts |
 | `stack/chat-brand/` | Open WebUI name, logo and theme, built from the same tokens |
+| [`stack/model-picker/`](stack/model-picker/) | Optional chat picker with host and family filters and unavailable model rows |
 | `tools/` | Open WebUI library-search tool |
 | `watcher/` | Release watcher |
 | `content/` | Library manifest and a dated safety quick reference for the chat's knowledge base |

@@ -1,0 +1,271 @@
+diff --git a/backend/open_webui/main.py b/backend/open_webui/main.py
+index 29f5855..0212dc9 100644
+--- a/backend/open_webui/main.py
++++ b/backend/open_webui/main.py
+@@ -898,10 +898,18 @@ async def get_models(
+     # models the caller can actually see.
+     models = await get_filtered_models(models, user)
+ 
+-    for model in models:
++    registered_ids = {model['id'] for model in all_models if not model.get('picker_base_missing')}
++    for index, model in enumerate(models):
+         info = model.get('info') if isinstance(model.get('info'), dict) else {}
+         meta = info.get('meta') if isinstance(info.get('meta'), dict) else {}
+ 
++        base_id = info.get('base_model_id')
++        if base_id and base_id not in registered_ids and not ENABLE_CUSTOM_MODEL_FALLBACK:
++            # Only decorate the response, never the cached routing record.
++            model = model.copy()
++            models[index] = model
++            model['picker_base_missing'] = True
++
+         # Leave profile images out; this model list is traveling light.
+         meta.pop('profile_image_url', None)
+ 
+@@ -938,6 +946,26 @@ async def get_models(
+     return {'data': models}
+ 
+ 
++@app.get('/api/models/picker-catalog')
++async def get_picker_catalog(user=Depends(get_verified_user)):
++    """Display metadata for configured entries, including when discovery is empty."""
++    records = [
++        {
++            'id': model.id,
++            'name': model.name,
++            'info': {'user_id': model.user_id, 'base_model_id': model.base_model_id},
++            'tags': normalize_model_tags(getattr(model.meta, 'tags', None)),
++        }
++        for model in await Models.get_all_models()
++        if model.is_active and not getattr(model.meta, 'hidden', False)
++    ]
++    visible = await get_filtered_models(records, user)
++    return [
++        {**record, 'info': {'base_model_id': record['info']['base_model_id']}}
++        for record in visible
++    ]
++
++
+ @app.get('/api/models/base')
+ async def get_base_models(request: Request, user=Depends(get_admin_user)):
+     models = await get_all_base_models(request, user=user)
+diff --git a/backend/open_webui/utils/models.py b/backend/open_webui/utils/models.py
+index fc2913d..5310360 100644
+--- a/backend/open_webui/utils/models.py
++++ b/backend/open_webui/utils/models.py
+@@ -157,7 +157,8 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
+             if config.get('models.base_models_cache') and redis is not None:
+                 await redis.set(BASE_MODELS_CACHE_KEY, JSONCodec.dumps(base_models))
+         else:
+-            base_models = request.app.state.BASE_MODELS
++            # Upstream retains the last catalog when every backend drops out.
++            base_models = [dict(model, picker_base_missing=True) for model in request.app.state.BASE_MODELS]
+ 
+     # deep copy the base models to avoid modifying the original list
+     models = [model.copy() for model in base_models]
+diff --git a/src/lib/components/chat/ModelSelector.svelte b/src/lib/components/chat/ModelSelector.svelte
+index da551aa..eb7bf30 100644
+--- a/src/lib/components/chat/ModelSelector.svelte
++++ b/src/lib/components/chat/ModelSelector.svelte
+@@ -1,7 +1,9 @@
+ <script lang="ts">
+-	import { models, pinnedModels, settings, user } from '$lib/stores';
++	import { models, pinnedModels, selectedTerminalId, settings, user } from '$lib/stores';
++	import { WEBUI_BASE_URL } from '$lib/constants';
+ 	import { getContext } from 'svelte';
+ 	import { toast } from 'svelte-sonner';
++	import { pickerItems } from './ModelSelector/picker.mjs';
+ 	import Selector from './ModelSelector/Selector.svelte';
+ 
+ 	import { updateUserSettings } from '$lib/apis/users';
+@@ -22,6 +24,28 @@
+ 
+ 	let compareModels = selectedModels.length > 1;
+ 	let selector;
++	let rememberedPins = new Map();
++	let pinOwner;
++	let configured = [];
++	let catalogRequest = 0;
++	const loadCatalog = async () => {
++		const request = ++catalogRequest;
++		try {
++			const response = await fetch(`${WEBUI_BASE_URL}/api/models/picker-catalog`, {
++				headers: { authorization: `Bearer ${localStorage.token}` }
++			});
++			const records = response.ok ? await response.json() : [];
++			if (request === catalogRequest) configured = records;
++		} catch {
++			if (request === catalogRequest) configured = [];
++		}
++	};
++	$: if (pinOwner !== $user?.id) {
++		pinOwner = $user?.id;
++		catalogRequest++;
++		configured = [];
++		rememberedPins = new Map();
++	}
+ 
+ 	export const open = () => selector?.open();
+ 
+@@ -70,11 +94,10 @@
+ 					bind:this={selector}
+ 					id="model"
+ 					placeholder={$i18n.t('Select a model')}
+-					items={$models.map((model) => ({
+-						value: model.id,
+-						label: resolveLocalizedModelName(model, $i18n.language),
+-						model: model
+-					}))}
++					faceted
++					onOpen={loadCatalog}
++					items={pickerItems($models, $settings?.pinnedModels, $selectedTerminalId,
++						(model) => resolveLocalizedModelName(model, $i18n.language), rememberedPins, configured)}
+ 					{pinModelHandler}
+ 					{className}
+ 					{triggerClassName}
+diff --git a/src/lib/components/chat/ModelSelector/Selector.svelte b/src/lib/components/chat/ModelSelector/Selector.svelte
+index 5839d9c..9e11b5b 100644
+--- a/src/lib/components/chat/ModelSelector/Selector.svelte
++++ b/src/lib/components/chat/ModelSelector/Selector.svelte
+@@ -55,6 +55,7 @@
+ 	import Keyframes from '$lib/components/icons/Keyframes.svelte';
+ 	import TagSelector from '$lib/components/workspace/common/TagSelector.svelte';
+ 
++	import { options } from './picker.mjs';
+ 	import ModelItem from './ModelItem.svelte';
+ 
+ 	const i18n: any = getContext('i18n');
+@@ -69,6 +70,15 @@
+ 	export let placeholder: string | undefined = undefined;
+ 	export let searchEnabled = true;
+ 	export let searchPlaceholder: string | undefined = undefined;
++	export let faceted = false;
++	export let onOpen = () => {};
++	let host = '';
++	let family = '';
++	$: hosts = faceted ? options(items, 'host') : [];
++	$: families = faceted ? options(items, 'family') : [];
++	$: if (host && !hosts.includes(host)) host = '';
++	$: if (family && !families.includes(family)) family = '';
++
+ 	export let selectionOnly = false;
+ 	export let includeHidden = false;
+ 
+@@ -148,6 +158,7 @@
+ 	const toggleOpen = async () => {
+ 		show = !show;
+ 		if (show) {
++			onOpen();
+ 			searchValue = '';
+ 			listScrollTop = 0;
+ 			if (!selectionOnly) {
+@@ -305,7 +316,10 @@
+ 							return item.model?.direct;
+ 						}
+ 					})
+-	).filter((item) => includeHidden || !(item.model?.info?.meta?.hidden ?? false));
++	)
++		.filter((item) => includeHidden || !item.model?.info?.meta?.hidden)
++		.filter((item) => (!host || item.host === host) && (!family || item.family === family))
++		.sort((a, b) => Number(!!a.unavailable) - Number(!!b.unavailable));
+ 
+ 	$: sanitizedSearchValue = searchValue.trim();
+ 	$: downloadTargets =
+@@ -347,6 +361,7 @@
+ 	);
+ 
+ 	$: if (
++		host !== undefined || family !== undefined ||
+ 		selectedTag !== undefined ||
+ 		selectedConnectionType !== undefined ||
+ 		searchValue !== undefined
+@@ -425,6 +440,7 @@
+ 	};
+ 
+ 	const selectItem = (item, index: number) => {
++		if (item.unavailable) return;
+ 		selectedModelIdx = index;
+ 
+ 		if (values) {
+@@ -1064,6 +1080,27 @@
+ 						</div>
+ 					{/if}
+ 
++					{#if faceted && (hosts.length || families.length)}
++						<div class="flex gap-2 px-2 py-1 border-b border-gray-100 dark:border-gray-800">
++							{#if hosts.length}
++								<label class="min-w-0 flex-1 text-xs">Host
++									<select bind:value={host} class="w-full bg-transparent">
++										<option value="">All hosts</option>
++										{#each hosts as name}<option value={name}>{name}</option>{/each}
++									</select>
++								</label>
++							{/if}
++							{#if families.length}
++								<label class="min-w-0 flex-1 text-xs">Family
++									<select bind:value={family} class="w-full bg-transparent">
++										<option value="">All families</option>
++										{#each families as name}<option value={name}>{name}</option>{/each}
++									</select>
++								</label>
++							{/if}
++						</div>
++					{/if}
++
+ 					<div class="sr-only" aria-live="polite" aria-atomic="true">
+ 						{#if sanitizedSearchValue}
+ 							{filteredItems.length === 0
+@@ -1125,25 +1162,34 @@
+ 								<div style="height: {visibleStart * ITEM_HEIGHT}px;" />
+ 								{#each filteredItems.slice(visibleStart, visibleEnd) as item, i (item.value)}
+ 									{@const index = visibleStart + i}
+-									<ModelItem
+-										onComment={(request) => (comments = request)}
+-										bind:selectedModelIdx
+-										{item}
+-										{index}
+-										value={primaryValue}
+-										{pinModelHandler}
+-										{unloadModelHandler}
+-										{deleteModelHandler}
+-										{selectionOnly}
+-										{compareEnabled}
+-										{selectedValues}
+-										onClick={() => {
+-											selectItem(item, index);
+-										}}
+-										onEdit={() => {
+-											show = false;
+-										}}
+-									/>
++									{#if item.unavailable}
++										<div role="option" aria-selected="false" aria-disabled="true"
++											id="model-option-{index}" data-arrow-selected={index === selectedModelIdx}
++											class="flex h-8 items-center justify-between gap-2 px-2 text-xs text-gray-500 dark:text-gray-400">
++											<span class="truncate" title={item.label}>{item.label}</span>
++											<span>Unavailable</span>
++										</div>
++									{:else}
++										<ModelItem
++											onComment={(request) => (comments = request)}
++											bind:selectedModelIdx
++											{item}
++											{index}
++											value={primaryValue}
++											{pinModelHandler}
++											{unloadModelHandler}
++											{deleteModelHandler}
++											{selectionOnly}
++											{compareEnabled}
++											{selectedValues}
++											onClick={() => {
++												selectItem(item, index);
++											}}
++											onEdit={() => {
++												show = false;
++											}}
++										/>
++									{/if}
+ 								{/each}
+ 								<div style="height: {(filteredItems.length - visibleEnd) * ITEM_HEIGHT}px;" />
+ 							</div>
