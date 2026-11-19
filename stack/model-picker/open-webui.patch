@@ -1,5 +1,5 @@
 diff --git a/backend/open_webui/main.py b/backend/open_webui/main.py
-index 29f5855..0212dc9 100644
+index 29f5855..3fd9a23 100644
 --- a/backend/open_webui/main.py
 +++ b/backend/open_webui/main.py
 @@ -898,10 +898,18 @@ async def get_models(
@@ -22,7 +22,7 @@ index 29f5855..0212dc9 100644
          # Leave profile images out; this model list is traveling light.
          meta.pop('profile_image_url', None)
  
-@@ -938,6 +946,26 @@ async def get_models(
+@@ -938,6 +946,25 @@ async def get_models(
      return {'data': models}
  
  
@@ -40,10 +40,9 @@ index 29f5855..0212dc9 100644
 +        if model.is_active and not getattr(model.meta, 'hidden', False)
 +    ]
 +    visible = await get_filtered_models(records, user)
-+    return [
-+        {**record, 'info': {'base_model_id': record['info']['base_model_id']}}
-+        for record in visible
-+    ]
++    for record in visible:
++        del record['info']['user_id']
++    return visible
 +
 +
  @app.get('/api/models/base')
@@ -124,10 +123,27 @@ index da551aa..eb7bf30 100644
  					{className}
  					{triggerClassName}
 diff --git a/src/lib/components/chat/ModelSelector/Selector.svelte b/src/lib/components/chat/ModelSelector/Selector.svelte
-index 5839d9c..f705758 100644
+index 5839d9c..0f04a48 100644
 --- a/src/lib/components/chat/ModelSelector/Selector.svelte
 +++ b/src/lib/components/chat/ModelSelector/Selector.svelte
-@@ -55,6 +55,7 @@
+@@ -14,7 +14,7 @@
+ 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
+ 	import { flyAndScale } from '$lib/utils/transitions';
+ 
+-	import { onMount, getContext, tick } from 'svelte';
++	import { onDestroy, getContext, tick } from 'svelte';
+ 
+ 	import { deleteModel, getOllamaVersion, pullModel } from '$lib/apis/ollama';
+ 	import { deleteModelById } from '$lib/apis/models';
+@@ -28,6 +28,7 @@
+ 
+ 	import {
+ 		user,
++		chatId, selectedFolder, selectedTerminalId,
+ 		MODEL_DOWNLOAD_POOL,
+ 		mobile,
+ 		models,
+@@ -55,6 +56,7 @@
  	import Keyframes from '$lib/components/icons/Keyframes.svelte';
  	import TagSelector from '$lib/components/workspace/common/TagSelector.svelte';
  
@@ -135,7 +151,7 @@ index 5839d9c..f705758 100644
  	import ModelItem from './ModelItem.svelte';
  
  	const i18n: any = getContext('i18n');
-@@ -69,6 +70,15 @@
+@@ -69,6 +71,15 @@
  	export let placeholder: string | undefined = undefined;
  	export let searchEnabled = true;
  	export let searchPlaceholder: string | undefined = undefined;
@@ -151,15 +167,25 @@ index 5839d9c..f705758 100644
  	export let selectionOnly = false;
  	export let includeHidden = false;
  
-@@ -145,9 +155,21 @@
+@@ -145,9 +156,31 @@
  		}
  	};
  
++	let discoveryRequest = 0;
++	onDestroy(() => { discoveryRequest++; });
 +	const refreshModels = async () => {
++		const request = ++discoveryRequest;
++		const token = localStorage.token;
++		const terminal = $selectedTerminalId;
++		const chat = $chatId;
++		const folder = $selectedFolder;
 +		try {
-+			const catalog = await getModels(localStorage.token,
++			const catalog = await getModels(token,
 +				$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null));
-+			models.set(catalog);
++			if (request === discoveryRequest && token === localStorage.token &&
++				terminal === $selectedTerminalId && chat === $chatId && folder === $selectedFolder) {
++				models.set(catalog);
++			}
 +		} catch {
 +			// Keep the last list if the chat server itself is unreachable.
 +		}
@@ -173,19 +199,72 @@ index 5839d9c..f705758 100644
  			searchValue = '';
  			listScrollTop = 0;
  			if (!selectionOnly) {
-@@ -305,7 +327,10 @@
- 							return item.model?.direct;
- 						}
- 					})
+@@ -258,54 +291,16 @@
+ 		}
+ 	);
+ 
+-	$: filteredItems = (
+-		searchValue
+-			? fuse
+-					.search(searchValue)
+-					.map((e) => {
+-						return e.item;
+-					})
+-					.filter((item) => {
+-						if (selectedTag === '') {
+-							return true;
+-						}
+-
+-						return (item.model?.tags ?? [])
+-							.map((tag) => tag.name.toLowerCase())
+-							.includes(selectedTag.toLowerCase());
+-					})
+-					.filter((item) => {
+-						if (selectedConnectionType === '') {
+-							return true;
+-						} else if (selectedConnectionType === 'local') {
+-							return item.model?.connection_type === 'local';
+-						} else if (selectedConnectionType === 'external') {
+-							return item.model?.connection_type === 'external';
+-						} else if (selectedConnectionType === 'direct') {
+-							return item.model?.direct;
+-						}
+-					})
+-			: items
+-					.filter((item) => {
+-						if (selectedTag === '') {
+-							return true;
+-						}
+-						return (item.model?.tags ?? [])
+-							.map((tag) => tag.name.toLowerCase())
+-							.includes(selectedTag.toLowerCase());
+-					})
+-					.filter((item) => {
+-						if (selectedConnectionType === '') {
+-							return true;
+-						} else if (selectedConnectionType === 'local') {
+-							return item.model?.connection_type === 'local';
+-						} else if (selectedConnectionType === 'external') {
+-							return item.model?.connection_type === 'external';
+-						} else if (selectedConnectionType === 'direct') {
+-							return item.model?.direct;
+-						}
+-					})
 -	).filter((item) => includeHidden || !(item.model?.info?.meta?.hidden ?? false));
-+	)
++	$: matches = searchValue ? fuse.search(searchValue).map(({ item }) => item) : items;
++	$: filteredItems = matches
++		.filter((item) => !selectedTag || item.model?.tags?.some(
++			(tag) => tag.name.toLowerCase() === selectedTag.toLowerCase()
++		))
++		.filter((item) => !selectedConnectionType || (selectedConnectionType === 'direct'
++			? item.model?.direct : item.model?.connection_type === selectedConnectionType))
 +		.filter((item) => includeHidden || !item.model?.info?.meta?.hidden)
 +		.filter((item) => (!host || item.host === host) && (!family || item.family === family))
 +		.sort((a, b) => Number(!!a.unavailable) - Number(!!b.unavailable));
  
  	$: sanitizedSearchValue = searchValue.trim();
  	$: downloadTargets =
-@@ -347,6 +372,7 @@
+@@ -347,6 +342,7 @@
  	);
  
  	$: if (
@@ -193,7 +272,7 @@ index 5839d9c..f705758 100644
  		selectedTag !== undefined ||
  		selectedConnectionType !== undefined ||
  		searchValue !== undefined
-@@ -425,6 +451,7 @@
+@@ -425,6 +421,7 @@
  	};
  
  	const selectItem = (item, index: number) => {
@@ -201,7 +280,28 @@ index 5839d9c..f705758 100644
  		selectedModelIdx = index;
  
  		if (values) {
-@@ -925,14 +952,7 @@
+@@ -751,16 +748,10 @@
+ 			: [];
+ 	};
+ 
+-	onMount(() => {
+-		if (items) {
+-			tags = items
+-				.filter((item) => includeHidden || !(item.model?.info?.meta?.hidden ?? false))
+-				.flatMap((item) => item.model?.tags ?? [])
+-				.map((tag) => tag.name.toLowerCase());
+-			// Remove duplicates and sort
+-			tags = Array.from(new Set(tags)).sort((a, b) => a.localeCompare(b));
+-		}
+-	});
++	$: tags = Array.from(new Set(items
++		.filter((item) => includeHidden || !item.model?.info?.meta?.hidden)
++		.flatMap((item) => (item.model?.tags ?? []).map((tag) => tag.name.toLowerCase()))
++	)).sort((a, b) => a.localeCompare(b));
+ 
+ 	const cancelModelPullHandler = async (model: string) => {
+ 		const { reader, abortController, providerLabel } = $MODEL_DOWNLOAD_POOL[model];
+@@ -925,14 +916,7 @@
  			false)
  				? 'dark:placeholder-gray-100 placeholder-gray-800'
  				: 'placeholder-gray-400'}"
@@ -217,7 +317,7 @@ index 5839d9c..f705758 100644
  		>
  			<span class="min-w-0 flex-1 truncate">{triggerLabel}</span>
  			<ChevronDown className="ml-1 size-2.5 shrink-0 self-center" strokeWidth="2.5" />
-@@ -1064,6 +1084,27 @@
+@@ -1064,6 +1048,27 @@
  						</div>
  					{/if}
  
@@ -245,7 +345,7 @@ index 5839d9c..f705758 100644
  					<div class="sr-only" aria-live="polite" aria-atomic="true">
  						{#if sanitizedSearchValue}
  							{filteredItems.length === 0
-@@ -1125,25 +1166,34 @@
+@@ -1125,25 +1130,34 @@
  								<div style="height: {visibleStart * ITEM_HEIGHT}px;" />
  								{#each filteredItems.slice(visibleStart, visibleEnd) as item, i (item.value)}
  									{@const index = visibleStart + i}

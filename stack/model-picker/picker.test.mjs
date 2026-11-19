@@ -60,3 +60,29 @@ test('lists missing configured models on cold start and prefers a live copy', ()
   assert.deepEqual(pickerItems([model], [], null, label, new Map(), [model])
     .map(item => item.unavailable), [false]);
 });
+
+test('a preset inherits its tagged base host before falling back to the prefix', () => {
+  const models = [
+    { id: 'pc.qwen', tags: [{ name: 'Host:Studio' }] },
+    { id: 'assistant', info: { base_model_id: 'pc.qwen' } },
+  ];
+  const items = pickerItems(models, [], null, label);
+  assert.deepEqual(items.map(item => item.host), ['Studio', 'Studio']);
+});
+
+test('personal pins keep their connection and tag filters during an outage', () => {
+  const cache = new Map();
+  const model = { id: 'custom', connection_type: 'local', tags: [{ name: 'Lab' }] };
+  pickerItems([model], ['custom'], null, label, cache);
+  const missingPreset = { id: 'custom', picker_base_missing: true };
+  for (const [models, configured] of [[[], []], [[], [{ id: 'custom' }]], [[missingPreset], []]]) {
+    const [row] = pickerItems(models, ['custom'], null, label, cache, configured);
+    assert.equal(row.model.connection_type, 'local');
+    assert.deepEqual(row.model.tags, model.tags);
+  }
+});
+
+test('terminal names cannot override the agent family', () => {
+  const model = { id: 'agent:qwen:codex:gpt-5', agent: { provider: 'codex', model: 'gpt-5' } };
+  assert.equal(facets(model).family, 'OpenAI');
+});
