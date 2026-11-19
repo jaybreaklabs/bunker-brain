@@ -1,0 +1,29 @@
+{
+  "name": "Bunker Brain (Open WebUI)",
+  "short_name": "Bunker Brain (Open WebUI)",
+  "description": "Bunker Brain (Open WebUI) is an open, extensible, user-friendly interface for AI that adapts to your workflow.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#293420",
+  "icons": [
+    {
+      "src": "/static/icon-dark.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icon-dark.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": {
+      "text": "shared"
+    }
+  }
+}

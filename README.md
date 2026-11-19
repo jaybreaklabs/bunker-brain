@@ -107,6 +107,9 @@ licenses.
 ---
 
 <p align="center">
-  <img src="docs/readme/mark.svg" width="36" alt="Bunker Brain mark"><br>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="web/brand/app-icon-dark-180.png">
+    <img src="web/brand/app-icon-180.png" width="36" height="36" alt="Bunker Brain mark">
+  </picture><br>
   <sub>Built to sit on the shelf, not in the cloud.</sub>
 </p>

@@ -26,6 +26,10 @@ services:
       # served static folder at start, so these replace its logo, icons and custom.css.
       # Its license allows this for deployments of 50 users or fewer.
       - ./chat-brand/custom.css:/app/build/static/custom.css:ro
+      - ./chat-brand/icon-dark.png:/app/build/static/icon-dark.png:ro
+      - ./chat-brand/apple-touch-icon-dark.png:/app/build/static/apple-touch-icon-dark.png:ro
+      - ./chat-brand/manifest-dark.webmanifest:/app/build/static/manifest-dark.webmanifest:ro
+      - ./chat-brand/loader.js:/app/build/static/loader.js:ro
       - ./chat-brand/favicon.png:/app/build/static/favicon.png:ro
       - ./chat-brand/favicon.svg:/app/build/static/favicon.svg:ro
       - ./chat-brand/favicon.ico:/app/build/static/favicon.ico:ro

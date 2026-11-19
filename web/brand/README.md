@@ -13,7 +13,7 @@ fonts only, no CDN, no web fonts.
 | `ui.js` | ES module with one function per component, returning DOM nodes. |
 | `lockup-cream.png` | Logo + wordmark for the dark header bar. |
 | `favicon.svg`, `favicon.ico`, `favicon-32.png` | Browser tab icon (simplified brain for small sizes). |
-| `app-icon-180/192/512.png` | Home-screen icons (`/manifest.webmanifest`, apple-touch-icon). |
+| `app-icon-180/192/512.png` | Light installation artwork, olive on oat. The matching `app-icon-dark-*.png` files reverse the colors. |
 | `terrain.jpg` | Illustrated terrain used on the map card. Not real map data. |
 
 Pages load the two stylesheets and import from `ui.js`:
@@ -71,3 +71,5 @@ Type helpers: `.bb-display` (page title), `.bb-heading`, `.bb-subheading`, `.bb-
 Artwork from the Bunker Brain design kit (Contour Atlas identity), made for this
 project. The PNGs were resized and re-saved without metadata. The kit's terrain
 picture is illustrative, not map data.
+
+The home and map pages select touch icons and manifests using the device appearance. The header always uses the cream wordmark on its olive bar. Browser tabs use the simplified adaptive SVG. The installed launcher may cache the artwork selected at installation.

@@ -44,6 +44,17 @@ class BrandTests(unittest.TestCase):
                         continue
                     self.assertTrue((WEB / path.lstrip("/")).is_file(), f"{f.name} refers to missing {ref}")
 
+    def test_library_install_manifests_share_identity_and_have_both_icon_sizes(self):
+        for suffix in ("", "-dark"):
+            manifest = json.loads((WEB / f"manifest{suffix}.webmanifest").read_text())
+            self.assertEqual(manifest["start_url"], "/")
+            self.assertEqual(
+                {icon["src"] for icon in manifest["icons"]},
+                {f"/brand/app-icon{suffix}-{size}.png" for size in (192, 512)},
+            )
+            for icon in manifest["icons"]:
+                self.assertTrue((WEB / icon["src"].lstrip("/")).is_file())
+
     def test_chat_brand_mounts_exist(self):
         compose = (ROOT / "stack/compose.yaml").read_text()
         mounts = re.findall(r"\./chat-brand/([\w.-]+):/app/build/static/([\w.-]+):ro", compose)
