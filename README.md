@@ -69,6 +69,8 @@ a reverse proxy if you want HTTPS names.
 5. Open chat, create the first account (it becomes admin), turn off sign-ups,
    add a model connection, and install the library tool from
    [tools/README.md](tools/README.md).
+6. For optional Codex or Claude Code subscription access in chat, follow the
+   [Open Terminal setup](stack/open-terminal.md).
 
 The release watcher is a single stdlib Python script run from cron; see
 [watcher/README.md](watcher/README.md).
