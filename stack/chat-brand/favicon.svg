@@ -1,8 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 16 16" role="img"><title>Bunker Brain favicon</title>
-<rect width="16" height="16" rx="3" fill="#293420"/>
-<g fill="#F7F2E5">
+<style>@media (prefers-color-scheme:dark){rect{fill:#293420}g[fill="#293420"]{fill:#F7F2E5}g[stroke]{stroke:#293420}}</style>
+<rect width="16" height="16" rx="3" fill="#F7F2E5"/>
+<g fill="#293420">
 <path id="lobe" d="M7.4 3.8C7.4 2 5 2 4.2 4C2.3 3.9 1.1 5.8 1.6 7.1C.5 8.2.8 10 2 10.8C1.9 12 3.3 13.2 4.7 12.9C5.4 14.2 7.4 13.8 7.4 12.4Z"/>
 <use xlink:href="#lobe" transform="translate(16 0) scale(-1 1)"/></g>
-<g fill="none" stroke="#293420" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round">
+<g fill="none" stroke="#F7F2E5" stroke-width="1.12" stroke-linecap="round" stroke-linejoin="round">
 <path id="folds" d="M3.2 6.6Q5.2 5.3 5.4 4.2M2.2 9.3Q4.1 8.2 5.9 9.6M4.5 12.1Q5.5 11.5 5.8 10.6"/>
 <use xlink:href="#folds" transform="translate(16 0) scale(-1 1)"/></g></svg>

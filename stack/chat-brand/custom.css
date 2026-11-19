@@ -76,3 +76,11 @@ html.dark #chat-pane::before {
 /* Links and citations pick up ochre */
 .markdown-prose a { text-decoration-color: var(--bb-ochre); text-underline-offset: 3px; }
 ::selection { background: color-mix(in srgb, var(--bb-ochre) 45%, transparent); }
+
+/* Open WebUI uses this image in the sign-in form and navigation. */
+html.dark img.bb-default-model-icon,
+html.dark img[src="/favicon.png"],
+html.dark img[src$="/static/favicon.png"],
+html.dark img[src*="/static/favicon.png?"] {
+  content: url("/static/icon-dark.png");
+}

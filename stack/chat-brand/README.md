@@ -26,3 +26,11 @@ license). A home server fits; a bigger deployment should drop these mounts.
 **Upgrading Open WebUI:** if a new version moves `build/static` or renames these
 files, the mounts stop doing anything (nothing breaks, the stock look returns).
 Re-check the paths above against the new version's source.
+
+The light app tile uses bunker olive on paper oat. Dark mode reverses those
+colors. The on-page icon follows the chat theme. The tab SVG follows browser
+appearance. The pinned frontend loads `loader.js`, which selects the touch
+icon and install manifest when the chat theme changes. The default manifest
+uses `logo.png`; the dark manifest preserves its start URL and share action.
+Check both manifests when upgrading or changing the chat name. An installed
+launcher may cache its icon until the app is added again.
