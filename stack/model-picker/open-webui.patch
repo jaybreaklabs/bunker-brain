@@ -1,0 +1,401 @@
+diff --git a/backend/open_webui/main.py b/backend/open_webui/main.py
+index 29f5855..3fd9a23 100644
+--- a/backend/open_webui/main.py
++++ b/backend/open_webui/main.py
+@@ -898,10 +898,18 @@ async def get_models(
+     # models the caller can actually see.
+     models = await get_filtered_models(models, user)
+ 
+-    for model in models:
++    registered_ids = {model['id'] for model in all_models if not model.get('picker_base_missing')}
++    for index, model in enumerate(models):
+         info = model.get('info') if isinstance(model.get('info'), dict) else {}
+         meta = info.get('meta') if isinstance(info.get('meta'), dict) else {}
+ 
++        base_id = info.get('base_model_id')
++        if base_id and base_id not in registered_ids and not ENABLE_CUSTOM_MODEL_FALLBACK:
++            # Only decorate the response, never the cached routing record.
++            model = model.copy()
++            models[index] = model
++            model['picker_base_missing'] = True
++
+         # Leave profile images out; this model list is traveling light.
+         meta.pop('profile_image_url', None)
+ 
+@@ -938,6 +946,25 @@ async def get_models(
+     return {'data': models}
+ 
+ 
++@app.get('/api/models/picker-catalog')
++async def get_picker_catalog(user=Depends(get_verified_user)):
++    """Display metadata for configured entries, including when discovery is empty."""
++    records = [
++        {
++            'id': model.id,
++            'name': model.name,
++            'info': {'user_id': model.user_id, 'base_model_id': model.base_model_id},
++            'tags': normalize_model_tags(getattr(model.meta, 'tags', None)),
++        }
++        for model in await Models.get_all_models()
++        if model.is_active and not getattr(model.meta, 'hidden', False)
++    ]
++    visible = await get_filtered_models(records, user)
++    for record in visible:
++        del record['info']['user_id']
++    return visible
++
++
+ @app.get('/api/models/base')
+ async def get_base_models(request: Request, user=Depends(get_admin_user)):
+     models = await get_all_base_models(request, user=user)
+diff --git a/backend/open_webui/utils/models.py b/backend/open_webui/utils/models.py
+index fc2913d..5310360 100644
+--- a/backend/open_webui/utils/models.py
++++ b/backend/open_webui/utils/models.py
+@@ -157,7 +157,8 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
+             if config.get('models.base_models_cache') and redis is not None:
+                 await redis.set(BASE_MODELS_CACHE_KEY, JSONCodec.dumps(base_models))
+         else:
+-            base_models = request.app.state.BASE_MODELS
++            # Upstream retains the last catalog when every backend drops out.
++            base_models = [dict(model, picker_base_missing=True) for model in request.app.state.BASE_MODELS]
+ 
+     # deep copy the base models to avoid modifying the original list
+     models = [model.copy() for model in base_models]
+diff --git a/src/lib/components/chat/ModelSelector.svelte b/src/lib/components/chat/ModelSelector.svelte
+index da551aa..eb7bf30 100644
+--- a/src/lib/components/chat/ModelSelector.svelte
++++ b/src/lib/components/chat/ModelSelector.svelte
+@@ -1,7 +1,9 @@
+ <script lang="ts">
+-	import { models, pinnedModels, settings, user } from '$lib/stores';
++	import { models, pinnedModels, selectedTerminalId, settings, user } from '$lib/stores';
++	import { WEBUI_BASE_URL } from '$lib/constants';
+ 	import { getContext } from 'svelte';
+ 	import { toast } from 'svelte-sonner';
++	import { pickerItems } from './ModelSelector/picker.mjs';
+ 	import Selector from './ModelSelector/Selector.svelte';
+ 
+ 	import { updateUserSettings } from '$lib/apis/users';
+@@ -22,6 +24,28 @@
+ 
+ 	let compareModels = selectedModels.length > 1;
+ 	let selector;
++	let rememberedPins = new Map();
++	let pinOwner;
++	let configured = [];
++	let catalogRequest = 0;
++	const loadCatalog = async () => {
++		const request = ++catalogRequest;
++		try {
++			const response = await fetch(`${WEBUI_BASE_URL}/api/models/picker-catalog`, {
++				headers: { authorization: `Bearer ${localStorage.token}` }
++			});
++			const records = response.ok ? await response.json() : [];
++			if (request === catalogRequest) configured = records;
++		} catch {
++			if (request === catalogRequest) configured = [];
++		}
++	};
++	$: if (pinOwner !== $user?.id) {
++		pinOwner = $user?.id;
++		catalogRequest++;
++		configured = [];
++		rememberedPins = new Map();
++	}
+ 
+ 	export const open = () => selector?.open();
+ 
+@@ -70,11 +94,10 @@
+ 					bind:this={selector}
+ 					id="model"
+ 					placeholder={$i18n.t('Select a model')}
+-					items={$models.map((model) => ({
+-						value: model.id,
+-						label: resolveLocalizedModelName(model, $i18n.language),
+-						model: model
+-					}))}
++					faceted
++					onOpen={loadCatalog}
++					items={pickerItems($models, $settings?.pinnedModels, $selectedTerminalId,
++						(model) => resolveLocalizedModelName(model, $i18n.language), rememberedPins, configured)}
+ 					{pinModelHandler}
+ 					{className}
+ 					{triggerClassName}
+diff --git a/src/lib/components/chat/ModelSelector/Selector.svelte b/src/lib/components/chat/ModelSelector/Selector.svelte
+index 5839d9c..0f04a48 100644
+--- a/src/lib/components/chat/ModelSelector/Selector.svelte
++++ b/src/lib/components/chat/ModelSelector/Selector.svelte
+@@ -14,7 +14,7 @@
+ 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
+ 	import { flyAndScale } from '$lib/utils/transitions';
+ 
+-	import { onMount, getContext, tick } from 'svelte';
++	import { onDestroy, getContext, tick } from 'svelte';
+ 
+ 	import { deleteModel, getOllamaVersion, pullModel } from '$lib/apis/ollama';
+ 	import { deleteModelById } from '$lib/apis/models';
+@@ -28,6 +28,7 @@
+ 
+ 	import {
+ 		user,
++		chatId, selectedFolder, selectedTerminalId,
+ 		MODEL_DOWNLOAD_POOL,
+ 		mobile,
+ 		models,
+@@ -55,6 +56,7 @@
+ 	import Keyframes from '$lib/components/icons/Keyframes.svelte';
+ 	import TagSelector from '$lib/components/workspace/common/TagSelector.svelte';
+ 
++	import { options } from './picker.mjs';
+ 	import ModelItem from './ModelItem.svelte';
+ 
+ 	const i18n: any = getContext('i18n');
+@@ -69,6 +71,15 @@
+ 	export let placeholder: string | undefined = undefined;
+ 	export let searchEnabled = true;
+ 	export let searchPlaceholder: string | undefined = undefined;
++	export let faceted = false;
++	export let onOpen = () => {};
++	let host = '';
++	let family = '';
++	$: hosts = faceted ? options(items, 'host') : [];
++	$: families = faceted ? options(items, 'family') : [];
++	$: if (host && !hosts.includes(host)) host = '';
++	$: if (family && !families.includes(family)) family = '';
++
+ 	export let selectionOnly = false;
+ 	export let includeHidden = false;
+ 
+@@ -145,9 +156,31 @@
+ 		}
+ 	};
+ 
++	let discoveryRequest = 0;
++	onDestroy(() => { discoveryRequest++; });
++	const refreshModels = async () => {
++		const request = ++discoveryRequest;
++		const token = localStorage.token;
++		const terminal = $selectedTerminalId;
++		const chat = $chatId;
++		const folder = $selectedFolder;
++		try {
++			const catalog = await getModels(token,
++				$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null));
++			if (request === discoveryRequest && token === localStorage.token &&
++				terminal === $selectedTerminalId && chat === $chatId && folder === $selectedFolder) {
++				models.set(catalog);
++			}
++		} catch {
++			// Keep the last list if the chat server itself is unreachable.
++		}
++	};
++
+ 	const toggleOpen = async () => {
+ 		show = !show;
+ 		if (show) {
++			onOpen();
++			if (faceted) refreshModels();
+ 			searchValue = '';
+ 			listScrollTop = 0;
+ 			if (!selectionOnly) {
+@@ -258,54 +291,16 @@
+ 		}
+ 	);
+ 
+-	$: filteredItems = (
+-		searchValue
+-			? fuse
+-					.search(searchValue)
+-					.map((e) => {
+-						return e.item;
+-					})
+-					.filter((item) => {
+-						if (selectedTag === '') {
+-							return true;
+-						}
+-
+-						return (item.model?.tags ?? [])
+-							.map((tag) => tag.name.toLowerCase())
+-							.includes(selectedTag.toLowerCase());
+-					})
+-					.filter((item) => {
+-						if (selectedConnectionType === '') {
+-							return true;
+-						} else if (selectedConnectionType === 'local') {
+-							return item.model?.connection_type === 'local';
+-						} else if (selectedConnectionType === 'external') {
+-							return item.model?.connection_type === 'external';
+-						} else if (selectedConnectionType === 'direct') {
+-							return item.model?.direct;
+-						}
+-					})
+-			: items
+-					.filter((item) => {
+-						if (selectedTag === '') {
+-							return true;
+-						}
+-						return (item.model?.tags ?? [])
+-							.map((tag) => tag.name.toLowerCase())
+-							.includes(selectedTag.toLowerCase());
+-					})
+-					.filter((item) => {
+-						if (selectedConnectionType === '') {
+-							return true;
+-						} else if (selectedConnectionType === 'local') {
+-							return item.model?.connection_type === 'local';
+-						} else if (selectedConnectionType === 'external') {
+-							return item.model?.connection_type === 'external';
+-						} else if (selectedConnectionType === 'direct') {
+-							return item.model?.direct;
+-						}
+-					})
+-	).filter((item) => includeHidden || !(item.model?.info?.meta?.hidden ?? false));
++	$: matches = searchValue ? fuse.search(searchValue).map(({ item }) => item) : items;
++	$: filteredItems = matches
++		.filter((item) => !selectedTag || item.model?.tags?.some(
++			(tag) => tag.name.toLowerCase() === selectedTag.toLowerCase()
++		))
++		.filter((item) => !selectedConnectionType || (selectedConnectionType === 'direct'
++			? item.model?.direct : item.model?.connection_type === selectedConnectionType))
++		.filter((item) => includeHidden || !item.model?.info?.meta?.hidden)
++		.filter((item) => (!host || item.host === host) && (!family || item.family === family))
++		.sort((a, b) => Number(!!a.unavailable) - Number(!!b.unavailable));
+ 
+ 	$: sanitizedSearchValue = searchValue.trim();
+ 	$: downloadTargets =
+@@ -347,6 +342,7 @@
+ 	);
+ 
+ 	$: if (
++		host !== undefined || family !== undefined ||
+ 		selectedTag !== undefined ||
+ 		selectedConnectionType !== undefined ||
+ 		searchValue !== undefined
+@@ -425,6 +421,7 @@
+ 	};
+ 
+ 	const selectItem = (item, index: number) => {
++		if (item.unavailable) return;
+ 		selectedModelIdx = index;
+ 
+ 		if (values) {
+@@ -751,16 +748,10 @@
+ 			: [];
+ 	};
+ 
+-	onMount(() => {
+-		if (items) {
+-			tags = items
+-				.filter((item) => includeHidden || !(item.model?.info?.meta?.hidden ?? false))
+-				.flatMap((item) => item.model?.tags ?? [])
+-				.map((tag) => tag.name.toLowerCase());
+-			// Remove duplicates and sort
+-			tags = Array.from(new Set(tags)).sort((a, b) => a.localeCompare(b));
+-		}
+-	});
++	$: tags = Array.from(new Set(items
++		.filter((item) => includeHidden || !item.model?.info?.meta?.hidden)
++		.flatMap((item) => (item.model?.tags ?? []).map((tag) => tag.name.toLowerCase()))
++	)).sort((a, b) => a.localeCompare(b));
+ 
+ 	const cancelModelPullHandler = async (model: string) => {
+ 		const { reader, abortController, providerLabel } = $MODEL_DOWNLOAD_POOL[model];
+@@ -925,14 +916,7 @@
+ 			false)
+ 				? 'dark:placeholder-gray-100 placeholder-gray-800'
+ 				: 'placeholder-gray-400'}"
+-			on:mouseenter={async () => {
+-				models.set(
+-					await getModels(
+-						localStorage.token,
+-						$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
+-					)
+-				);
+-			}}
++			on:mouseenter={() => !faceted && refreshModels()}
+ 		>
+ 			<span class="min-w-0 flex-1 truncate">{triggerLabel}</span>
+ 			<ChevronDown className="ml-1 size-2.5 shrink-0 self-center" strokeWidth="2.5" />
+@@ -1064,6 +1048,27 @@
+ 						</div>
+ 					{/if}
+ 
++					{#if faceted && (hosts.length || families.length)}
++						<div class="flex gap-2 px-2 py-1 border-b border-gray-100 dark:border-gray-800">
++							{#if hosts.length}
++								<label class="min-w-0 flex-1 text-xs">Host
++									<select bind:value={host} class="w-full bg-transparent">
++										<option value="">All hosts</option>
++										{#each hosts as name}<option value={name}>{name}</option>{/each}
++									</select>
++								</label>
++							{/if}
++							{#if families.length}
++								<label class="min-w-0 flex-1 text-xs">Family
++									<select bind:value={family} class="w-full bg-transparent">
++										<option value="">All families</option>
++										{#each families as name}<option value={name}>{name}</option>{/each}
++									</select>
++								</label>
++							{/if}
++						</div>
++					{/if}
++
+ 					<div class="sr-only" aria-live="polite" aria-atomic="true">
+ 						{#if sanitizedSearchValue}
+ 							{filteredItems.length === 0
+@@ -1125,25 +1130,34 @@
+ 								<div style="height: {visibleStart * ITEM_HEIGHT}px;" />
+ 								{#each filteredItems.slice(visibleStart, visibleEnd) as item, i (item.value)}
+ 									{@const index = visibleStart + i}
+-									<ModelItem
+-										onComment={(request) => (comments = request)}
+-										bind:selectedModelIdx
+-										{item}
+-										{index}
+-										value={primaryValue}
+-										{pinModelHandler}
+-										{unloadModelHandler}
+-										{deleteModelHandler}
+-										{selectionOnly}
+-										{compareEnabled}
+-										{selectedValues}
+-										onClick={() => {
+-											selectItem(item, index);
+-										}}
+-										onEdit={() => {
+-											show = false;
+-										}}
+-									/>
++									{#if item.unavailable}
++										<div role="option" aria-selected="false" aria-disabled="true"
++											id="model-option-{index}" data-arrow-selected={index === selectedModelIdx}
++											class="flex h-8 items-center justify-between gap-2 px-2 text-xs text-gray-500 dark:text-gray-400">
++											<span class="truncate" title={item.label}>{item.label}</span>
++											<span>Unavailable</span>
++										</div>
++									{:else}
++										<ModelItem
++											onComment={(request) => (comments = request)}
++											bind:selectedModelIdx
++											{item}
++											{index}
++											value={primaryValue}
++											{pinModelHandler}
++											{unloadModelHandler}
++											{deleteModelHandler}
++											{selectionOnly}
++											{compareEnabled}
++											{selectedValues}
++											onClick={() => {
++												selectItem(item, index);
++											}}
++											onEdit={() => {
++												show = false;
++											}}
++										/>
++									{/if}
+ 								{/each}
+ 								<div style="height: {(filteredItems.length - visibleEnd) * ITEM_HEIGHT}px;" />
+ 							</div>
